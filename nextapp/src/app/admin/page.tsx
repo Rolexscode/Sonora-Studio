@@ -3,7 +3,6 @@
 import { getSession } from "@/app/auth-actions";
 import { redirect } from "next/navigation";
 import AdminClient from "./AdminClient";
-
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -15,8 +14,22 @@ export default async function AdminPage() {
     redirect("/login");
   }
 
-  const products = await prisma.product.findMany();
-  const purchases = await prisma.purchase.findMany({ orderBy: { createdAt: 'desc' }});
+  const [products, purchases, users] = await Promise.all([
+    prisma.product.findMany(),
+    prisma.purchase.findMany({ orderBy: { createdAt: "desc" } }),
+    prisma.user.findMany({
+      where: { role: "CUSTOMER" },
+      include: { purchases: { select: { total: true } } },
+      orderBy: { id: "desc" },
+    }),
+  ]);
 
-  return <AdminClient session={session} products={products} purchases={purchases} />;
+  return (
+    <AdminClient
+      session={session}
+      products={products}
+      purchases={purchases}
+      users={users}
+    />
+  );
 }
