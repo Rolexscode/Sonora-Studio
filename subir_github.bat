@@ -14,7 +14,7 @@ echo Creando punto de guardado (commit)...
 call git commit -m "%msg%"
 echo.
 echo Subiendo a GitHub (esto actualizara Vercel automaticamente)...
-call git push
+call git push --set-upstream origin main
 echo.
 echo ========================================================
 echo ¡Subida finalizada!
