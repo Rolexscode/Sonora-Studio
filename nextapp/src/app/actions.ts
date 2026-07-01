@@ -11,39 +11,55 @@ export async function addProduct(formData: FormData) {
   const price = parseFloat(formData.get("price") as string);
   const rating = parseFloat(formData.get("rating") as string);
   const desc = formData.get("desc") as string;
+  const image = (formData.get("image") as string) || "/assets/images/hero_bg_1782346378898.png";
+  const inStock = formData.get("inStock") === "true";
+  const isNew = formData.get("isNew") === "true";
+  const specsRaw = formData.get("specs") as string;
+  const specs = specsRaw || JSON.stringify({ "Nuevo": "Sí" });
 
   await prisma.product.create({
-    data: {
-      name,
-      category,
-      price,
-      rating,
-      desc,
-      inStock: true,
-      isNew: true,
-      specs: JSON.stringify({ "Nuevo": "Sí" }),
-      image: "/assets/images/hero_bg_1782346378898.png"
-    }
+    data: { name, category, price, rating, desc, inStock, isNew, specs, image },
   });
 
   revalidatePath("/");
-}
-
-export async function createPurchase(userId: number, items: { id: number, name: string, price: number, quantity: number }[], total: number) {
-  await prisma.purchase.create({
-    data: {
-      userId,
-      total,
-      items: JSON.stringify(items),
-    }
-  });
-  revalidatePath("/purchases");
   revalidatePath("/admin");
 }
-export async function deleteProduct(id: number) {
-  await prisma.product.delete({
-    where: { id }
+
+export async function updateProduct(id: number, formData: FormData) {
+  const name = formData.get("name") as string;
+  const category = formData.get("category") as string;
+  const price = parseFloat(formData.get("price") as string);
+  const rating = parseFloat(formData.get("rating") as string);
+  const desc = formData.get("desc") as string;
+  const image = formData.get("image") as string;
+  const inStock = formData.get("inStock") === "true";
+  const isNew = formData.get("isNew") === "true";
+  const specsRaw = formData.get("specs") as string;
+  const specs = specsRaw || JSON.stringify({});
+
+  await prisma.product.update({
+    where: { id },
+    data: { name, category, price, rating, desc, inStock, isNew, specs, image },
   });
+
   revalidatePath("/");
+  revalidatePath("/admin");
+}
+
+export async function deleteProduct(id: number) {
+  await prisma.product.delete({ where: { id } });
+  revalidatePath("/");
+  revalidatePath("/admin");
+}
+
+export async function createPurchase(
+  userId: number,
+  items: { id: number; name: string; price: number; quantity: number }[],
+  total: number
+) {
+  await prisma.purchase.create({
+    data: { userId, total, items: JSON.stringify(items) },
+  });
+  revalidatePath("/purchases");
   revalidatePath("/admin");
 }
