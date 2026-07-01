@@ -19,15 +19,20 @@ async function main() {
     if(!exists) await prisma.product.create({ data: p })
   }
 
-  // Seed Users
-  const users = [
-    { email: "admin@sonora.com", password: "123", name: "Administrador", role: "ADMIN" },
-    { email: "cliente@sonora.com", password: "123", name: "Cliente VIP", role: "CUSTOMER" },
-  ]
-  
-  for (const u of users) {
-    const exists = await prisma.user.findUnique({ where: { email: u.email }})
-    if(!exists) await prisma.user.create({ data: u })
+  // Admin por defecto
+  const exists = await prisma.user.findUnique({ where: { email: "Admin@sonora.com" } })
+  if (!exists) {
+    await prisma.user.create({
+      data: { email: "Admin@sonora.com", password: "12345678", name: "Administrador", role: "ADMIN" }
+    })
+    console.log("Admin creado: Admin@sonora.com / 12345678")
+  } else {
+    // Actualizar contraseña si el admin ya existia con otra
+    await prisma.user.update({
+      where: { email: "Admin@sonora.com" },
+      data: { password: "12345678", role: "ADMIN" }
+    })
+    console.log("Admin actualizado.")
   }
 
   console.log('Database seeded!')
