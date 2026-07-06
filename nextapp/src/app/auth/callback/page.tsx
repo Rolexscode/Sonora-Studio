@@ -1,38 +1,52 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { syncGoogleUser } from "@/app/auth-actions";
 
 function CallbackContent() {
   const [error, setError] = useState("");
-  const searchParams = useSearchParams();
   const router = useRouter();
 
   useEffect(() => {
-    const code = searchParams.get("code");
-    if (!code) {
-      router.push("/login");
-      return;
-    }
+    async function handleCallback() {
+      // Handle both PKCE (?code=) and implicit (#access_token=) flows
+      const hash = window.location.hash;
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("code");
 
-    supabase.auth.exchangeCodeForSession(code).then(async ({ data, error }) => {
-      if (error || !data.user) {
-        setError("No se pudo autenticar. Intenta de nuevo.");
+      let user = null;
+
+      if (code) {
+        // PKCE flow
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error || !data.user) { setError("Error al autenticar (code)."); return; }
+        user = data.user;
+      } else if (hash && hash.includes("access_token")) {
+        // Implicit flow — supabase parses the hash automatically
+        const { data, error } = await supabase.auth.getSession();
+        if (error || !data.session) { setError("Error al autenticar (token)."); return; }
+        user = data.session.user;
+      } else {
+        router.push("/login");
         return;
       }
-      const email = data.user.email!;
-      const name = data.user.user_metadata?.full_name || data.user.user_metadata?.name || email.split("@")[0];
+
+      const email = user.email!;
+      const name = user.user_metadata?.full_name || user.user_metadata?.name || email.split("@")[0];
       const result = await syncGoogleUser(email, name);
+
       if (result?.success) {
         router.push(result.role === "ADMIN" ? "/admin" : "/");
         router.refresh();
       } else {
         setError("Error al crear la sesión.");
       }
-    });
-  }, [searchParams, router]);
+    }
+
+    handleCallback();
+  }, [router]);
 
   const purple = "#7c3aed";
 
