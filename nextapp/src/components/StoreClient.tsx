@@ -414,6 +414,11 @@ export default function StoreClient({ initialProducts, categories, session, acti
                   {checkoutMsg && <div style={{ color: checkoutMsg.includes('!') ? '#34d399' : '#f87171', fontSize: '14px', marginBottom: '16px', textAlign: 'center', background: checkoutMsg.includes('!') ? 'rgba(52, 211, 153, 0.1)' : 'rgba(248, 113, 113, 0.1)', padding: '8px', borderRadius: '8px' }}>{checkoutMsg}</div>}
                   <button 
                     onClick={checkoutStep === "cart" ? () => {
+                      if (!session) {
+                        setCheckoutMsg("Debes iniciar sesión para proceder al pago.");
+                        return;
+                      }
+                      setCheckoutMsg("");
                       setCheckoutStep("payment"); 
                       setPaymentMethods([{ method: "Efectivo", amount: cart.reduce((s, i) => s + getDiscountedPrice(i), 0) }]);
                     } : handleCheckout} 
