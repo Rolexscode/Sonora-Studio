@@ -2,7 +2,7 @@
 
 import { addProduct, updateProduct, deleteProduct, updateUserRole, addCategory, updateCategory, deleteCategory } from "@/app/actions";
 import { logout } from "@/app/auth-actions";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import {
   LogOut, Package, PlusCircle, ShoppingBag, Trash2,
@@ -310,13 +310,11 @@ function ProductForm({ initialData, categories, onSubmit, submitLabel, loading }
   const [form, setForm] = useState(initialData);
   const set = (key: keyof typeof form) => (v: unknown) => setForm(f => ({ ...f, [key]: v }));
 
-  import("react").then(React => {
-    React.useEffect(() => {
-      if (!form.categoryId && categories.length > 0) {
-        setForm(f => ({...f, categoryId: String(categories[0].id)}));
-      }
-    }, [categories, form.categoryId]);
-  });
+  useEffect(() => {
+    if ((!form.categoryId || form.categoryId === "null") && categories.length > 0) {
+      setForm(f => ({...f, categoryId: String(categories[0].id)}));
+    }
+  }, [categories, form.categoryId]);
 
   return (
     <form onSubmit={async e => { e.preventDefault(); await onSubmit(form); }} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px" }}>
