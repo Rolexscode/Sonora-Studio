@@ -1155,12 +1155,12 @@ export default function AdminClient(
                 <span>S/ {receiptSale.total.toFixed(2)}</span>
               </div>
 
-              {receiptSale.paymentDetails && (
+              {(receiptSale as any).paymentDetails && (
                 <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px dashed #ccc" }}>
                   <p style={{ margin: "0 0 8px", fontSize: "11px", fontWeight: 700, color: "#666", textTransform: "uppercase" }}>Métodos de Pago</p>
                   {(() => {
                     try {
-                      const methods = JSON.parse(receiptSale.paymentDetails);
+                      const methods = JSON.parse((receiptSale as any).paymentDetails);
                       return methods.map((m: any, idx: number) => (
                         <div key={idx} style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#333", marginBottom: "4px" }}>
                           <span>{m.method}</span>
