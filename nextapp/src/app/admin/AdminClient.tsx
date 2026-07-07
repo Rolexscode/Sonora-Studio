@@ -25,7 +25,7 @@ interface UserWithStats {
   purchases: { total: number }[];
 }
 
-type Tab = "dashboard" | "products" | "sales" | "customers";
+type Tab = "dashboard" | "products" | "sales" | "customers" | "admins";
 const CATEGORIES = ["guitarras", "bajos", "teclados", "baterias", "estudio"];
 
 const s = {
@@ -408,6 +408,9 @@ export default function AdminClient(
     return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.id.toString().includes(q);
   });
 
+  const displayCustomers = displayUsers.filter(u => u.role === "CUSTOMER");
+  const displayAdmins = displayUsers.filter(u => u.role === "ADMIN");
+
   const totalRevenue = purchases.reduce((acc, sale) => acc + sale.total, 0);
 
   // Chart data
@@ -457,7 +460,8 @@ export default function AdminClient(
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
     { id: "products", label: "Productos", icon: <Package size={18} />, badge: products.length },
     { id: "sales", label: "Ventas", icon: <ShoppingBag size={18} />, badge: purchases.length },
-    { id: "customers", label: "Usuarios", icon: <Users size={18} />, badge: users.length },
+    { id: "customers", label: "Clientes", icon: <Users size={18} />, badge: users.filter(u => u.role === "CUSTOMER").length },
+    { id: "admins", label: "Administradores", icon: <CheckCircle size={18} />, badge: users.filter(u => u.role === "ADMIN").length },
   ];
 
   const Sidebar = () => (
@@ -604,7 +608,8 @@ export default function AdminClient(
                 {tab === "dashboard" && "Resumen de tu tienda"}
                 {tab === "products" && `${products.length} productos registrados`}
                 {tab === "sales" && `${purchases.length} ventas realizadas`}
-                {tab === "customers" && `${users.length} usuarios registrados`}
+                {tab === "customers" && `${users.filter(u => u.role === "CUSTOMER").length} clientes registrados`}
+                {tab === "admins" && `${users.filter(u => u.role === "ADMIN").length} administradores`}
               </p>
             </div>
           </header>
@@ -840,8 +845,8 @@ export default function AdminClient(
             </div>
           )}
 
-          {/* ── CUSTOMERS ── */}
-          {tab === "customers" && (
+          {/* ── CUSTOMERS & ADMINS ── */}
+          {(tab === "customers" || tab === "admins") && (
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }} className="no-print">
                 <input 
@@ -864,15 +869,15 @@ export default function AdminClient(
                     </tr>
                   </thead>
                   <tbody>
-                    {displayUsers.length === 0 ? (
+                    {(tab === "customers" ? displayCustomers : displayAdmins).length === 0 ? (
                       <tr><td colSpan={6} style={{ padding: "40px", textAlign: "center", color: s.muted }}>
                         <Users size={28} style={{ opacity: 0.3, display: "block", margin: "0 auto 12px" }} />
-                        No se encontraron usuarios.
+                        No se encontraron {tab === "customers" ? "clientes" : "administradores"}.
                       </td></tr>
-                    ) : displayUsers.map((u, i) => {
+                    ) : (tab === "customers" ? displayCustomers : displayAdmins).map((u, i) => {
                       const userTotal = u.purchases.reduce((sum, p) => sum + p.total, 0);
                       return (
-                        <tr key={u.id} style={{ borderBottom: i < displayUsers.length - 1 ? `1px solid ${s.border}` : "none", transition: "background 0.15s" }}
+                        <tr key={u.id} style={{ borderBottom: i < (tab === "customers" ? displayCustomers : displayAdmins).length - 1 ? `1px solid ${s.border}` : "none", transition: "background 0.15s" }}
                           onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.015)")}
                           onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
                           <td style={{ padding: "12px 18px" }}>
@@ -919,11 +924,11 @@ export default function AdminClient(
                   </tbody>
                 </table>
               </div>
-              {users.length > 0 && (
+              {(tab === "customers" ? displayCustomers : displayAdmins).length > 0 && (
                 <div style={{ padding: "12px 20px", borderTop: `1px solid ${s.border}`, display: "flex", justifyContent: "flex-end", gap: "24px" }}>
-                  <span style={{ fontSize: "13px", color: s.muted }}>{users.length} usuarios</span>
+                  <span style={{ fontSize: "13px", color: s.muted }}>{(tab === "customers" ? displayCustomers : displayAdmins).length} {tab === "customers" ? "clientes" : "administradores"}</span>
                   <span style={{ fontSize: "13px", fontWeight: 700, color: s.green }}>
-                    Total: S/ {users.reduce((sum, u) => sum + u.purchases.reduce((s2, p) => s2 + p.total, 0), 0).toFixed(2)}
+                    Total: S/ {(tab === "customers" ? displayCustomers : displayAdmins).reduce((sum, u) => sum + u.purchases.reduce((s2, p) => s2 + p.total, 0), 0).toFixed(2)}
                   </span>
                 </div>
               )}
