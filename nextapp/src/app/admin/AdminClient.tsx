@@ -384,6 +384,8 @@ export default function AdminClient({ session, products = [], purchases = [], us
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchSalesQuery, setSearchSalesQuery] = useState("");
+  const [searchCustomersQuery, setSearchCustomersQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [receiptSale, setReceiptSale] = useState<Purchase | null>(null);
 
@@ -391,6 +393,19 @@ export default function AdminClient({ session, products = [], purchases = [], us
     .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.category.toLowerCase().includes(searchQuery.toLowerCase()))
     .slice()
     .reverse();
+
+  const displayPurchases = purchases.filter(sale => {
+    const q = searchSalesQuery.toLowerCase();
+    const idMatch = sale.id.toString().includes(q);
+    const userMatch = sale.user && (sale.user.name.toLowerCase().includes(q) || sale.user.email.toLowerCase().includes(q));
+    const itemsMatch = sale.items.toLowerCase().includes(q);
+    return idMatch || userMatch || itemsMatch;
+  });
+
+  const displayUsers = users.filter(u => {
+    const q = searchCustomersQuery.toLowerCase();
+    return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.id.toString().includes(q);
+  });
 
   const totalRevenue = purchases.reduce((acc, sale) => acc + sale.total, 0);
 
@@ -726,16 +741,25 @@ export default function AdminClient({ session, products = [], purchases = [], us
           {/* ── SALES ── */}
           {tab === "sales" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              {/* Export buttons */}
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", justifyContent: "flex-end" }} className="no-print">
-                <button onClick={() => exportCSV(purchases)}
-                  style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 18px", background: s.greenMuted, color: s.green, border: `1px solid rgba(16,185,129,0.2)`, borderRadius: "10px", cursor: "pointer", fontSize: "13px", fontWeight: 600 }}>
-                  <Download size={15} /> Exportar Excel / CSV
-                </button>
-                <button onClick={triggerPrint}
-                  style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 18px", background: s.redMuted, color: s.red, border: `1px solid rgba(248,113,113,0.2)`, borderRadius: "10px", cursor: "pointer", fontSize: "13px", fontWeight: 600 }}>
-                  <FileText size={15} /> Exportar PDF
-                </button>
+              {/* Search & Export buttons */}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", justifyContent: "space-between", alignItems: "center" }} className="no-print">
+                <input 
+                  type="text" 
+                  placeholder="Buscar por orden, cliente o producto..." 
+                  value={searchSalesQuery}
+                  onChange={e => setSearchSalesQuery(e.target.value)}
+                  style={{ padding: "10px 14px", background: s.card, border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none", width: "300px", maxWidth: "100%" }}
+                />
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button onClick={() => exportCSV(purchases)}
+                    style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 18px", background: s.greenMuted, color: s.green, border: `1px solid rgba(16,185,129,0.2)`, borderRadius: "10px", cursor: "pointer", fontSize: "13px", fontWeight: 600 }}>
+                    <Download size={15} /> Exportar Excel / CSV
+                  </button>
+                  <button onClick={triggerPrint}
+                    style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 18px", background: s.redMuted, color: s.red, border: `1px solid rgba(248,113,113,0.2)`, borderRadius: "10px", cursor: "pointer", fontSize: "13px", fontWeight: 600 }}>
+                    <FileText size={15} /> Exportar PDF
+                  </button>
+                </div>
               </div>
 
               <div style={{ background: s.card, borderRadius: "20px", border: `1px solid ${s.border}`, overflow: "hidden" }}>
@@ -749,13 +773,13 @@ export default function AdminClient({ session, products = [], purchases = [], us
                       </tr>
                     </thead>
                     <tbody>
-                      {purchases.length === 0 ? (
-                        <tr><td colSpan={5} style={{ padding: "40px", textAlign: "center", color: s.muted }}>No hay ventas registradas.</td></tr>
-                      ) : purchases.map((sale, i) => {
+                      {displayPurchases.length === 0 ? (
+                        <tr><td colSpan={5} style={{ padding: "40px", textAlign: "center", color: s.muted }}>No se encontraron ventas.</td></tr>
+                      ) : displayPurchases.map((sale, i) => {
                         const items = (() => { try { return JSON.parse(sale.items || "[]"); } catch { return []; } })();
                         const date = new Date(sale.createdAt);
                         return (
-                          <tr key={sale.id} style={{ borderBottom: i < purchases.length - 1 ? `1px solid ${s.border}` : "none", transition: "background 0.15s" }}
+                          <tr key={sale.id} style={{ borderBottom: i < displayPurchases.length - 1 ? `1px solid ${s.border}` : "none", transition: "background 0.15s" }}
                             onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.015)")}
                             onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
                             <td style={{ padding: "14px 18px" }}>
@@ -805,6 +829,17 @@ export default function AdminClient({ session, products = [], purchases = [], us
 
           {/* ── CUSTOMERS ── */}
           {tab === "customers" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }} className="no-print">
+                <input 
+                  type="text" 
+                  placeholder="Buscar cliente por nombre, email o ID..." 
+                  value={searchCustomersQuery}
+                  onChange={e => setSearchCustomersQuery(e.target.value)}
+                  style={{ padding: "10px 14px", background: s.card, border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none", width: "300px", maxWidth: "100%" }}
+                />
+              </div>
+
             <div style={{ background: s.card, borderRadius: "20px", border: `1px solid ${s.border}`, overflow: "hidden" }}>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: "540px" }}>
@@ -816,15 +851,15 @@ export default function AdminClient({ session, products = [], purchases = [], us
                     </tr>
                   </thead>
                   <tbody>
-                    {users.length === 0 ? (
+                    {displayUsers.length === 0 ? (
                       <tr><td colSpan={4} style={{ padding: "40px", textAlign: "center", color: s.muted }}>
                         <Users size={28} style={{ opacity: 0.3, display: "block", margin: "0 auto 12px" }} />
-                        No hay clientes registrados aún.
+                        No se encontraron clientes.
                       </td></tr>
-                    ) : users.map((u, i) => {
+                    ) : displayUsers.map((u, i) => {
                       const userTotal = u.purchases.reduce((sum, p) => sum + p.total, 0);
                       return (
-                        <tr key={u.id} style={{ borderBottom: i < users.length - 1 ? `1px solid ${s.border}` : "none", transition: "background 0.15s" }}
+                        <tr key={u.id} style={{ borderBottom: i < displayUsers.length - 1 ? `1px solid ${s.border}` : "none", transition: "background 0.15s" }}
                           onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.015)")}
                           onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
                           <td style={{ padding: "12px 18px" }}>
@@ -865,6 +900,7 @@ export default function AdminClient({ session, products = [], purchases = [], us
                   </span>
                 </div>
               )}
+            </div>
             </div>
           )}
         </main>
