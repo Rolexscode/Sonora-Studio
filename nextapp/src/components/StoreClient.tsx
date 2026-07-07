@@ -291,7 +291,7 @@ export default function StoreClient({ initialProducts, categories, session, acti
         </div>
         <nav className="nav-mobile">
           <ul>
-            {['all', 'guitarras', 'bajos', 'teclados', 'baterias', 'estudio'].map((c) => (
+            {['all', ...categories.map(c => c.name)].map((c) => (
               <li key={`mobile-${c}`}>
                 <button 
                   onClick={() => { setCategory(c); setShowMobileMenu(false); }} 
