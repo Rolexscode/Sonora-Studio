@@ -13,12 +13,13 @@ export async function addProduct(formData: FormData) {
   const desc = formData.get("desc") as string;
   const image = (formData.get("image") as string) || "/assets/images/hero_bg_1782346378898.png";
   const inStock = formData.get("inStock") === "true";
+  const stock = parseInt(formData.get("stock") as string) || 0;
   const isNew = formData.get("isNew") === "true";
   const specsRaw = formData.get("specs") as string;
   const specs = specsRaw || JSON.stringify({ "Nuevo": "Sí" });
 
   await prisma.product.create({
-    data: { name, category, price, rating, desc, inStock, isNew, specs, image },
+    data: { name, category, price, rating, desc, inStock, stock, isNew, specs, image },
   });
 
   revalidatePath("/");
@@ -33,13 +34,14 @@ export async function updateProduct(id: number, formData: FormData) {
   const desc = formData.get("desc") as string;
   const image = formData.get("image") as string;
   const inStock = formData.get("inStock") === "true";
+  const stock = parseInt(formData.get("stock") as string) || 0;
   const isNew = formData.get("isNew") === "true";
   const specsRaw = formData.get("specs") as string;
   const specs = specsRaw || JSON.stringify({});
 
   await prisma.product.update({
     where: { id },
-    data: { name, category, price, rating, desc, inStock, isNew, specs, image },
+    data: { name, category, price, rating, desc, inStock, stock, isNew, specs, image },
   });
 
   revalidatePath("/");

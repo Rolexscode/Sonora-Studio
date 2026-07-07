@@ -14,7 +14,7 @@ import { uploadProductImage } from "@/lib/supabase";
 
 interface Product {
   id: number; name: string; category: string; price: number;
-  rating: number; inStock: boolean; isNew: boolean; desc: string; specs: string; image: string;
+  rating: number; inStock: boolean; stock: number; isNew: boolean; desc: string; specs: string; image: string;
 }
 interface Purchase {
   id: number; userId: number; total: number; createdAt: Date; items: string;
@@ -286,17 +286,17 @@ function SpecsEditor({ value, onChange }: { value: SpecsEntry[]; onChange: (v: S
 
 // ─── Form helpers ────────────────────────────────────────────
 function emptyForm() {
-  return { name: "", category: "guitarras", price: "", rating: "4.5", desc: "", image: "", inStock: true, isNew: true, specs: [] as SpecsEntry[] };
+  return { name: "", category: "guitarras", price: "", rating: "4.5", stock: "0", desc: "", image: "", inStock: true, isNew: true, specs: [] as SpecsEntry[] };
 }
 function productToForm(p: Product) {
   let specs: SpecsEntry[] = [];
   try { const obj = JSON.parse(p.specs); specs = Object.entries(obj).map(([key, value]) => ({ key, value: String(value) })); } catch { /* empty */ }
-  return { name: p.name, category: p.category, price: String(p.price), rating: String(p.rating), desc: p.desc, image: p.image, inStock: p.inStock, isNew: p.isNew, specs };
+  return { name: p.name, category: p.category, price: String(p.price), rating: String(p.rating), stock: String(p.stock || 0), desc: p.desc, image: p.image, inStock: p.inStock, isNew: p.isNew, specs };
 }
 function formToFormData(form: ReturnType<typeof emptyForm>) {
   const fd = new FormData();
   fd.set("name", form.name); fd.set("category", form.category); fd.set("price", form.price);
-  fd.set("rating", form.rating); fd.set("desc", form.desc); fd.set("image", form.image);
+  fd.set("rating", form.rating); fd.set("stock", form.stock); fd.set("desc", form.desc); fd.set("image", form.image);
   fd.set("inStock", String(form.inStock)); fd.set("isNew", String(form.isNew));
   const specsObj: Record<string, string> = {};
   form.specs.forEach(({ key, value }) => { if (key) specsObj[key] = value; });
@@ -322,6 +322,7 @@ function ProductForm({ initialData, onSubmit, submitLabel, loading }:
       </div>
       <InputField label="Precio (S/)" name="price" type="number" step="0.01" min="0" required value={form.price} onChange={set("price")} placeholder="0.00" />
       <InputField label="Calificación" name="rating" type="number" step="0.1" min="1" max="5" required value={form.rating} onChange={set("rating")} placeholder="4.5" />
+      <InputField label="Cantidad (Stock)" name="stock" type="number" min="0" required value={form.stock} onChange={set("stock")} placeholder="0" />
       <div style={{ gridColumn: "1 / -1", display: "flex", flexWrap: "wrap", gap: "24px" }}>
         {[{ key: "inStock" as const, label: "En Stock", desc: "Disponible para compra" }, { key: "isNew" as const, label: "Producto Nuevo", desc: 'Badge "NUEVO"' }].map(({ key, label, desc }) => (
           <div key={key} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -381,6 +382,12 @@ export default function AdminClient({ session, products = [], purchases = [], us
   const [loading, setLoading] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const displayProducts = products
+    .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.category.toLowerCase().includes(searchQuery.toLowerCase()))
+    .slice()
+    .reverse();
 
   const totalRevenue = purchases.reduce((acc, sale) => acc + sale.total, 0);
 
@@ -645,24 +652,34 @@ export default function AdminClient({ session, products = [], purchases = [], us
 
           {/* ── PRODUCTS TABLE ── */}
           {tab === "products" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }} className="no-print">
+                <input 
+                  type="text" 
+                  placeholder="Buscar productos..." 
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  style={{ padding: "10px 14px", background: s.card, border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none", width: "300px" }}
+                />
+              </div>
             <div style={{ background: s.card, borderRadius: "20px", border: `1px solid ${s.border}`, overflow: "hidden" }}>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: "600px" }}>
                   <thead style={{ background: "rgba(255,255,255,0.02)", borderBottom: `1px solid ${s.border}` }}>
                     <tr>
-                      {["Producto", "Categoría", "Precio", "Estado", "Acciones"].map((h, i) => (
-                        <th key={h} style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700, textAlign: i === 4 ? "right" : "left" }}>{h}</th>
+                      {["Producto", "Categoría", "Precio", "Stock", "Estado", "Acciones"].map((h, i) => (
+                        <th key={h} style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700, textAlign: i === 5 ? "right" : "left" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {products.length === 0 ? (
-                      <tr><td colSpan={5} style={{ padding: "40px", textAlign: "center", color: s.muted }}>
+                    {displayProducts.length === 0 ? (
+                      <tr><td colSpan={6} style={{ padding: "40px", textAlign: "center", color: s.muted }}>
                         <Package size={28} style={{ opacity: 0.3, display: "block", margin: "0 auto 12px" }} />
-                        No hay productos.
-                        <button onClick={() => setTab("add")} style={{ display: "block", margin: "10px auto 0", padding: "6px 14px", background: s.purpleMuted, color: s.purpleLight, border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontWeight: 600 }}>Crear el primero</button>
+                        No se encontraron productos.
+                        <button onClick={() => setTab("add")} style={{ display: "block", margin: "10px auto 0", padding: "6px 14px", background: s.purpleMuted, color: s.purpleLight, border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontWeight: 600 }}>Crear producto</button>
                       </td></tr>
-                    ) : products.map(p => (
+                    ) : displayProducts.map(p => (
                       <tr key={p.id} style={{ borderBottom: `1px solid ${s.border}`, transition: "background 0.15s" }}
                         onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.015)")}
                         onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
@@ -682,6 +699,7 @@ export default function AdminClient({ session, products = [], purchases = [], us
                           <span style={{ fontSize: "11px", padding: "3px 8px", background: s.purpleMuted, color: s.purpleLight, borderRadius: "6px", fontWeight: 600, textTransform: "capitalize" }}>{p.category}</span>
                         </td>
                         <td style={{ padding: "12px 18px", fontSize: "14px", fontWeight: 700 }}>S/ {p.price.toFixed(2)}</td>
+                        <td style={{ padding: "12px 18px", fontSize: "13px" }}>{p.stock} un.</td>
                         <td style={{ padding: "12px 18px" }}>
                           <span style={{ fontSize: "11px", padding: "3px 8px", background: p.inStock ? s.greenMuted : s.redMuted, color: p.inStock ? s.green : s.red, borderRadius: "6px", fontWeight: 600 }}>
                             {p.inStock ? "En Stock" : "Agotado"}
@@ -702,6 +720,7 @@ export default function AdminClient({ session, products = [], purchases = [], us
                   </tbody>
                 </table>
               </div>
+            </div>
             </div>
           )}
 
