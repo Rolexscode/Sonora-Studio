@@ -24,6 +24,7 @@ interface Product {
 
 export default function StoreClient({ initialProducts, categories, session }: { initialProducts: Product[], categories: { id: number; name: string }[], session: { id: number, name: string, email: string, role: string } | null }) {
   const [category, setCategory] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [cart, setCart] = useState<Product[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCart, setShowCart] = useState(false);
@@ -31,7 +32,13 @@ export default function StoreClient({ initialProducts, categories, session }: { 
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const filteredProducts = initialProducts.filter(
-    (p) => category === "all" || p.category?.name === category
+    (p) => {
+      const matchCategory = category === "all" || p.category?.name === category;
+      const matchSearch = searchQuery === "" || 
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        p.desc.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchCategory && matchSearch;
+    }
   );
 
   const groupedCart = cart.reduce((acc, item) => {
@@ -129,7 +136,7 @@ export default function StoreClient({ initialProducts, categories, session }: { 
           <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div className="search-wrapper" style={{ position: 'relative' }}>
               <Search className="search-icon" size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#a1a1aa' }} />
-              <input type="text" placeholder="Buscar..." style={{ padding: '8px 16px 8px 36px', borderRadius: '24px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }} />
+              <input type="text" placeholder="Buscar..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ padding: '8px 16px 8px 36px', borderRadius: '24px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }} />
             </div>
             
             <div style={{ position: 'relative' }}>
