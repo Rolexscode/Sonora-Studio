@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, User, ShoppingCart, Star, Package, Sparkles, LogOut, LayoutDashboard, Menu, X, ShoppingBag, Plus, Minus, Trash2 } from "lucide-react";
+import { Search, User, ShoppingCart, Star, Package, Sparkles, LogOut, LayoutDashboard, Menu, X, ShoppingBag, Plus, Minus, Trash2, Percent, Clock } from "lucide-react";
 import Link from "next/link";
 import { logout } from "@/app/auth-actions";
 import { createPurchase } from "@/app/actions";
@@ -44,6 +44,7 @@ export default function StoreClient({ initialProducts, categories, session, acti
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [checkoutStep, setCheckoutStep] = useState<"cart" | "payment">("cart");
   const [paymentMethods, setPaymentMethods] = useState<{method: string, amount: number}[]>([{ method: "Efectivo", amount: 0 }]);
+  const [showPromoModal, setShowPromoModal] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -165,7 +166,11 @@ export default function StoreClient({ initialProducts, categories, session, acti
     <div className="app-wrapper" style={{ paddingTop: 0 }}>
       {/* Top Announcement Bar */}
       {activePromotions.length > 0 ? (
-        <div className="announcement-bar" style={{ background: 'linear-gradient(90deg, #7c3aed, #db2777)', color: 'white', textAlign: 'center', padding: '10px 24px', fontWeight: 'bold', fontSize: '13px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', position: 'relative', top: 0, zIndex: 101, height: 'auto', minHeight: '38px' }}>
+        <div 
+          className="announcement-bar" 
+          style={{ background: 'linear-gradient(90deg, #7c3aed, #db2777)', color: 'white', textAlign: 'center', padding: '10px 24px', fontWeight: 'bold', fontSize: '13px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', position: 'relative', top: 0, zIndex: 101, height: 'auto', minHeight: '38px', cursor: 'pointer' }}
+          onClick={() => setShowPromoModal(true)}
+        >
           <Sparkles size={16} />
           {activePromotions[0].title} - ¡Hasta {Math.max(...activePromotions.map(p => p.discount))}% de descuento!
           <Sparkles size={16} />
@@ -600,6 +605,82 @@ export default function StoreClient({ initialProducts, categories, session, acti
                   </button>
                 </div>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Promotion Details Modal */}
+      <AnimatePresence>
+        {showPromoModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}
+            onClick={() => setShowPromoModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              style={{ background: '#12141d', width: '100%', maxWidth: '500px', borderRadius: '24px', overflow: 'hidden', maxHeight: '90vh', border: '1px solid rgba(255,255,255,0.1)', position: 'relative', padding: '32px' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button 
+                onClick={() => setShowPromoModal(false)}
+                style={{ position: 'absolute', top: '24px', right: '24px', background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10 }}
+              >
+                <X size={18} />
+              </button>
+
+              <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                <div style={{ background: 'rgba(219,39,119,0.1)', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: '#db2777' }}>
+                  <Percent size={32} />
+                </div>
+                <h2 style={{ fontSize: '24px', margin: '0 0 8px' }}>Promociones Activas</h2>
+                <p style={{ color: '#a1a1aa', margin: 0, fontSize: '14px' }}>Aprovecha nuestros descuentos especiales.</p>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto', maxHeight: '50vh', paddingRight: '4px' }}>
+                {activePromotions.map(promo => {
+                  let targetText = "Aplica a toda la tienda";
+                  if (promo.targetType === "CATEGORY") {
+                    const cat = categories.find(c => c.id === promo.targetId);
+                    if (cat) targetText = `Aplica a la categoría: ${cat.name}`;
+                  } else if (promo.targetType === "PRODUCT") {
+                    const prod = initialProducts.find(p => p.id === promo.targetId);
+                    if (prod) targetText = `Aplica al producto: ${prod.name}`;
+                  }
+                  
+                  const end = new Date(promo.endDate);
+
+                  return (
+                    <div key={promo.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '20px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                        <h3 style={{ fontSize: '18px', margin: 0, color: '#fff' }}>{promo.title}</h3>
+                        <span style={{ background: '#db2777', color: '#fff', fontWeight: 'bold', fontSize: '14px', padding: '4px 10px', borderRadius: '8px' }}>
+                          -{promo.discount}%
+                        </span>
+                      </div>
+                      <p style={{ color: '#e5e7eb', fontSize: '14px', margin: '0 0 8px' }}>
+                        <Package size={14} style={{ display: 'inline', marginRight: '6px', verticalAlign: '-2px' }}/> {targetText}
+                      </p>
+                      <p style={{ color: '#a1a1aa', fontSize: '13px', margin: 0 }}>
+                        <Clock size={14} style={{ display: 'inline', marginRight: '6px', verticalAlign: '-2px' }}/> 
+                        Válido hasta: {end.toLocaleDateString('es-PE')} a las {end.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <button 
+                onClick={() => setShowPromoModal(false)}
+                style={{ width: '100%', padding: '14px', background: '#db2777', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 600, marginTop: '24px', cursor: 'pointer', fontSize: '15px' }}
+              >
+                ¡Entendido, a comprar!
+              </button>
             </motion.div>
           </motion.div>
         )}
