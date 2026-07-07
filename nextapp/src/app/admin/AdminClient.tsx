@@ -24,7 +24,7 @@ interface UserWithStats {
   purchases: { total: number }[];
 }
 
-type Tab = "dashboard" | "products" | "add" | "sales" | "customers";
+type Tab = "dashboard" | "products" | "sales" | "customers";
 const CATEGORIES = ["guitarras", "bajos", "teclados", "baterias", "estudio"];
 
 const s = {
@@ -383,6 +383,7 @@ export default function AdminClient({ session, products = [], purchases = [], us
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const displayProducts = products
     .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.category.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -406,7 +407,7 @@ export default function AdminClient({ session, products = [], purchases = [], us
 
   const handleAdd = async (form: ReturnType<typeof emptyForm>) => {
     setLoading(true);
-    try { await addProduct(formToFormData(form)); showToast("¡Producto creado exitosamente!"); }
+    try { await addProduct(formToFormData(form)); showToast("¡Producto creado exitosamente!"); setShowAddModal(false); }
     catch { showToast("Error al crear el producto.", false); }
     finally { setLoading(false); }
   };
@@ -425,7 +426,6 @@ export default function AdminClient({ session, products = [], purchases = [], us
   const navItems: { id: Tab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
     { id: "products", label: "Productos", icon: <Package size={18} />, badge: products.length },
-    { id: "add", label: "Nuevo Producto", icon: <PlusCircle size={18} /> },
     { id: "sales", label: "Ventas", icon: <ShoppingBag size={18} />, badge: purchases.length },
     { id: "customers", label: "Clientes", icon: <Users size={18} />, badge: users.length },
   ];
@@ -573,7 +573,6 @@ export default function AdminClient({ session, products = [], purchases = [], us
               <p style={{ margin: 0, fontSize: "13px", color: s.muted }}>
                 {tab === "dashboard" && "Resumen de tu tienda"}
                 {tab === "products" && `${products.length} productos registrados`}
-                {tab === "add" && "Completa todos los campos"}
                 {tab === "sales" && `${purchases.length} ventas realizadas`}
                 {tab === "customers" && `${users.length} clientes registrados`}
               </p>
@@ -643,12 +642,7 @@ export default function AdminClient({ session, products = [], purchases = [], us
             </div>
           )}
 
-          {/* ── ADD PRODUCT ── */}
-          {tab === "add" && (
-            <div style={{ background: s.card, padding: "28px", borderRadius: "20px", border: `1px solid ${s.border}`, maxWidth: "860px" }}>
-              <ProductForm key="add" initialData={emptyForm()} onSubmit={handleAdd} submitLabel="Crear Producto" loading={loading} />
-            </div>
-          )}
+          {/* ── ADD PRODUCT WAS REMOVED FROM HERE ── */}
 
           {/* ── PRODUCTS TABLE ── */}
           {tab === "products" && (
@@ -659,8 +653,11 @@ export default function AdminClient({ session, products = [], purchases = [], us
                   placeholder="Buscar productos..." 
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  style={{ padding: "10px 14px", background: s.card, border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none", width: "300px" }}
+                  style={{ padding: "10px 14px", background: s.card, border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none", width: "300px", maxWidth: "100%" }}
                 />
+                <button onClick={() => setShowAddModal(true)} style={{ padding: "10px 18px", background: s.purple, color: "#fff", border: "none", borderRadius: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                  <Package size={16} /> Nuevo
+                </button>
               </div>
             <div style={{ background: s.card, borderRadius: "20px", border: `1px solid ${s.border}`, overflow: "hidden" }}>
               <div style={{ overflowX: "auto" }}>
@@ -677,7 +674,7 @@ export default function AdminClient({ session, products = [], purchases = [], us
                       <tr><td colSpan={6} style={{ padding: "40px", textAlign: "center", color: s.muted }}>
                         <Package size={28} style={{ opacity: 0.3, display: "block", margin: "0 auto 12px" }} />
                         No se encontraron productos.
-                        <button onClick={() => setTab("add")} style={{ display: "block", margin: "10px auto 0", padding: "6px 14px", background: s.purpleMuted, color: s.purpleLight, border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontWeight: 600 }}>Crear producto</button>
+                        <button onClick={() => setShowAddModal(true)} style={{ display: "block", margin: "10px auto 0", padding: "6px 14px", background: s.purpleMuted, color: s.purpleLight, border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontWeight: 600 }}>Crear producto</button>
                       </td></tr>
                     ) : displayProducts.map(p => (
                       <tr key={p.id} style={{ borderBottom: `1px solid ${s.border}`, transition: "background 0.15s" }}
@@ -875,6 +872,27 @@ export default function AdminClient({ session, products = [], purchases = [], us
               </div>
               <div style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
                 <ProductForm key={editProduct.id} initialData={productToForm(editProduct)} onSubmit={handleUpdate} submitLabel="Guardar Cambios" loading={loading} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── ADD MODAL ── */}
+        {showAddModal && (
+          <div onClick={e => { if (e.target === e.currentTarget) setShowAddModal(false); }}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", animation: "fadeIn 0.2s ease" }}>
+            <div style={{ background: s.surface, border: `1px solid ${s.border}`, borderRadius: "24px", width: "100%", maxWidth: "820px", maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+              <div style={{ padding: "20px 24px", borderBottom: `1px solid ${s.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 800 }}>Nuevo Producto</h2>
+                  <p style={{ margin: 0, fontSize: "12px", color: s.muted }}>Completa todos los campos para tu inventario</p>
+                </div>
+                <button onClick={() => setShowAddModal(false)} style={{ background: "rgba(255,255,255,0.06)", border: "none", borderRadius: "8px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: s.text }}>
+                  <X size={16} />
+                </button>
+              </div>
+              <div style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
+                <ProductForm key="add" initialData={emptyForm()} onSubmit={handleAdd} submitLabel="Crear Producto" loading={loading} />
               </div>
             </div>
           </div>
