@@ -1,6 +1,6 @@
 "use client";
 
-import { addProduct, updateProduct, deleteProduct } from "@/app/actions";
+import { addProduct, updateProduct, deleteProduct, updateUserRole } from "@/app/actions";
 import { logout } from "@/app/auth-actions";
 import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
@@ -435,6 +435,18 @@ export default function AdminClient({ session, products = [], purchases = [], us
     catch { showToast("Error al actualizar.", false); }
     finally { setLoading(false); }
   };
+
+  const handleRoleChange = async (userId: number, currentRole: string) => {
+    const newRole = currentRole === "ADMIN" ? "CUSTOMER" : "ADMIN";
+    if (!confirm(`¿Estás seguro de cambiar el rol a ${newRole}?`)) return;
+    setLoading(true);
+    try { 
+      await updateUserRole(userId, newRole); 
+      showToast(`Rol actualizado a ${newRole}.`); 
+    }
+    catch { showToast("Error al cambiar el rol.", false); }
+    finally { setLoading(false); }
+  };
   const handleDelete = async (id: number) => {
     if (!confirm("¿Eliminar este producto?")) return;
     await deleteProduct(id); showToast("Producto eliminado.");
@@ -444,7 +456,7 @@ export default function AdminClient({ session, products = [], purchases = [], us
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
     { id: "products", label: "Productos", icon: <Package size={18} />, badge: products.length },
     { id: "sales", label: "Ventas", icon: <ShoppingBag size={18} />, badge: purchases.length },
-    { id: "customers", label: "Clientes", icon: <Users size={18} />, badge: users.length },
+    { id: "customers", label: "Usuarios", icon: <Users size={18} />, badge: users.length },
   ];
 
   const Sidebar = () => (
@@ -591,7 +603,7 @@ export default function AdminClient({ session, products = [], purchases = [], us
                 {tab === "dashboard" && "Resumen de tu tienda"}
                 {tab === "products" && `${products.length} productos registrados`}
                 {tab === "sales" && `${purchases.length} ventas realizadas`}
-                {tab === "customers" && `${users.length} clientes registrados`}
+                {tab === "customers" && `${users.length} usuarios registrados`}
               </p>
             </div>
           </header>
@@ -833,7 +845,7 @@ export default function AdminClient({ session, products = [], purchases = [], us
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }} className="no-print">
                 <input 
                   type="text" 
-                  placeholder="Buscar cliente por nombre, email o ID..." 
+                  placeholder="Buscar usuario por nombre, email o ID..." 
                   value={searchCustomersQuery}
                   onChange={e => setSearchCustomersQuery(e.target.value)}
                   style={{ padding: "10px 14px", background: s.card, border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none", width: "300px", maxWidth: "100%" }}
@@ -845,16 +857,16 @@ export default function AdminClient({ session, products = [], purchases = [], us
                 <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: "540px" }}>
                   <thead style={{ background: "rgba(255,255,255,0.02)", borderBottom: `1px solid ${s.border}` }}>
                     <tr>
-                      {["Cliente", "Email", "Compras", "Total Gastado"].map((h, i) => (
-                        <th key={h} style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700, textAlign: i === 3 ? "right" : "left" }}>{h}</th>
+                      {["Usuario", "Email", "Compras", "Total Gastado", "Rol", "Acciones"].map((h, i) => (
+                        <th key={h} style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700, textAlign: i === 3 ? "right" : i > 3 ? "center" : "left" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {displayUsers.length === 0 ? (
-                      <tr><td colSpan={4} style={{ padding: "40px", textAlign: "center", color: s.muted }}>
+                      <tr><td colSpan={6} style={{ padding: "40px", textAlign: "center", color: s.muted }}>
                         <Users size={28} style={{ opacity: 0.3, display: "block", margin: "0 auto 12px" }} />
-                        No se encontraron clientes.
+                        No se encontraron usuarios.
                       </td></tr>
                     ) : displayUsers.map((u, i) => {
                       const userTotal = u.purchases.reduce((sum, p) => sum + p.total, 0);
@@ -886,6 +898,20 @@ export default function AdminClient({ session, products = [], purchases = [], us
                           <td style={{ padding: "12px 18px", textAlign: "right", fontSize: "14px", fontWeight: 700, color: userTotal > 0 ? s.green : s.muted }}>
                             {userTotal > 0 ? `S/ ${userTotal.toFixed(2)}` : "—"}
                           </td>
+                          <td style={{ padding: "12px 18px", textAlign: "center" }}>
+                            <span style={{ fontSize: "11px", padding: "3px 8px", background: u.role === "ADMIN" ? s.skyMuted : "rgba(255,255,255,0.04)", color: u.role === "ADMIN" ? s.sky : s.muted, borderRadius: "6px", fontWeight: 600 }}>
+                              {u.role}
+                            </span>
+                          </td>
+                          <td style={{ padding: "12px 18px", textAlign: "center" }}>
+                            {u.id !== session.id ? (
+                              <button onClick={() => handleRoleChange(u.id, u.role)} disabled={loading} style={{ background: u.role === "ADMIN" ? s.redMuted : s.greenMuted, color: u.role === "ADMIN" ? s.red : s.green, border: "none", padding: "6px 12px", borderRadius: "8px", fontSize: "11px", fontWeight: 600, cursor: loading ? "not-allowed" : "pointer" }}>
+                                {u.role === "ADMIN" ? "Quitar Admin" : "Hacer Admin"}
+                              </button>
+                            ) : (
+                              <span style={{ fontSize: "11px", color: s.muted }}>Tú</span>
+                            )}
+                          </td>
                         </tr>
                       );
                     })}
@@ -894,7 +920,7 @@ export default function AdminClient({ session, products = [], purchases = [], us
               </div>
               {users.length > 0 && (
                 <div style={{ padding: "12px 20px", borderTop: `1px solid ${s.border}`, display: "flex", justifyContent: "flex-end", gap: "24px" }}>
-                  <span style={{ fontSize: "13px", color: s.muted }}>{users.length} clientes</span>
+                  <span style={{ fontSize: "13px", color: s.muted }}>{users.length} usuarios</span>
                   <span style={{ fontSize: "13px", fontWeight: 700, color: s.green }}>
                     Total: S/ {users.reduce((sum, u) => sum + u.purchases.reduce((s2, p) => s2 + p.total, 0), 0).toFixed(2)}
                   </span>

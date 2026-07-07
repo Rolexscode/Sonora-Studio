@@ -18,7 +18,6 @@ export default async function AdminPage() {
     prisma.product.findMany(),
     prisma.purchase.findMany({ include: { user: true }, orderBy: { createdAt: "desc" } }),
     prisma.user.findMany({
-      where: { role: "CUSTOMER" },
       include: { purchases: { select: { total: true } } },
       orderBy: { id: "desc" },
     }),

@@ -76,3 +76,11 @@ export async function createPurchase(
   revalidatePath("/purchases");
   revalidatePath("/admin");
 }
+
+export async function updateUserRole(userId: number, role: string) {
+  await prisma.user.update({
+    where: { id: userId },
+    data: { role },
+  });
+  revalidatePath("/admin");
+}
