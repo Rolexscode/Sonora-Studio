@@ -780,6 +780,11 @@ export default function AdminClient({ session, products = [], purchases = [], us
                               </div>
                             </td>
                             <td style={{ padding: "14px 18px", textAlign: "right", fontSize: "15px", fontWeight: 800, color: s.green }}>S/ {sale.total.toFixed(2)}</td>
+                            <td style={{ padding: "14px 18px", textAlign: "center" }}>
+                              <button onClick={() => setReceiptSale(sale)} style={{ background: s.skyMuted, color: s.sky, border: "none", padding: "6px 12px", borderRadius: "8px", fontSize: "11px", fontWeight: 600, cursor: "pointer" }}>
+                                Ver boleta
+                              </button>
+                            </td>
                           </tr>
                         );
                       })}
