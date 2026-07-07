@@ -30,6 +30,7 @@ export default function StoreClient({ initialProducts, categories, session }: { 
   const [showCart, setShowCart] = useState(false);
   const [checkoutMsg, setCheckoutMsg] = useState("");
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const filteredProducts = initialProducts.filter(
     (p) => {
@@ -333,6 +334,7 @@ export default function StoreClient({ initialProducts, categories, session }: { 
                 className="product-card"
                 style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', overflow: 'hidden', cursor: 'pointer', transition: 'transform 0.3s' }}
                 whileHover={{ y: -5, background: 'rgba(255,255,255,0.04)' }}
+                onClick={() => setSelectedProduct(p)}
               >
                 <div className="card-media" style={{ height: '240px', background: '#000', position: 'relative' }}>
                   {p.isNew && <span style={{ position: 'absolute', top: '12px', left: '12px', background: '#7c3aed', color: '#fff', fontSize: '10px', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold' }}><Sparkles size={12} style={{ display: 'inline', marginRight: '4px' }} />NUEVO</span>}
@@ -362,6 +364,82 @@ export default function StoreClient({ initialProducts, categories, session }: { 
           </AnimatePresence>
         </motion.div>
       </section>
+
+      {/* Product Details Modal */}
+      <AnimatePresence>
+        {selectedProduct && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}
+            onClick={() => setSelectedProduct(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              style={{ background: '#12141d', width: '100%', maxWidth: '900px', borderRadius: '24px', overflow: 'hidden', display: 'flex', flexWrap: 'wrap', maxHeight: '90vh', border: '1px solid rgba(255,255,255,0.1)', position: 'relative' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button 
+                onClick={() => setSelectedProduct(null)}
+                style={{ position: 'absolute', top: '24px', right: '24px', background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10 }}
+              >
+                <X size={20} />
+              </button>
+
+              <div style={{ flex: '1 1 400px', background: '#000', position: 'relative' }}>
+                <img src={selectedProduct.image} alt={selectedProduct.name} style={{ width: '100%', height: '100%', objectFit: 'cover', minHeight: '300px' }} />
+                {selectedProduct.isNew && <span style={{ position: 'absolute', top: '24px', left: '24px', background: '#7c3aed', color: '#fff', fontSize: '12px', padding: '6px 12px', borderRadius: '8px', fontWeight: 'bold' }}><Sparkles size={14} style={{ display: 'inline', marginRight: '6px' }} />NUEVO</span>}
+              </div>
+              
+              <div style={{ flex: '1 1 400px', padding: '40px', overflowY: 'auto' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <span style={{ fontSize: '14px', color: '#7c3aed', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{selectedProduct.category?.name || "Sin Categoría"}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', fontSize: '14px', color: '#fbbf24', fontWeight: 'bold' }}><Star size={16} fill="#fbbf24" style={{ marginRight: '6px' }}/> {selectedProduct.rating} / 5</span>
+                </div>
+                
+                <h2 style={{ fontSize: '32px', marginBottom: '16px', lineHeight: 1.2 }}>{selectedProduct.name}</h2>
+                <p style={{ fontSize: '16px', color: '#a1a1aa', marginBottom: '32px', lineHeight: 1.6 }}>{selectedProduct.desc}</p>
+                
+                <div style={{ marginBottom: '32px' }}>
+                  <h4 style={{ fontSize: '14px', textTransform: 'uppercase', color: '#a1a1aa', letterSpacing: '0.05em', marginBottom: '12px' }}>Especificaciones</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    {Object.entries(JSON.parse(selectedProduct.specs || '{}')).map(([key, val]) => (
+                      <div key={key} style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ fontSize: '11px', color: '#a1a1aa', textTransform: 'uppercase', marginBottom: '4px' }}>{key}</div>
+                        <div style={{ fontSize: '14px', fontWeight: 500 }}>{String(val)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: '24px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                  <div>
+                    <div style={{ fontSize: '14px', color: '#a1a1aa', marginBottom: '4px' }}>Precio</div>
+                    <div style={{ fontSize: '32px', fontWeight: 'bold' }}>S/ {selectedProduct.price.toFixed(2)}</div>
+                    <div style={{ fontSize: '13px', color: (selectedProduct.inStock && selectedProduct.stock > 0) ? '#34d399' : '#f87171', marginTop: '4px' }}>
+                      {(selectedProduct.inStock && selectedProduct.stock > 0) ? `En Stock (${selectedProduct.stock} un.)` : 'Agotado'}
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={() => { addToCart(selectedProduct); setSelectedProduct(null); }}
+                    style={{ padding: '16px 32px', background: (selectedProduct.inStock && selectedProduct.stock > 0) ? '#7c3aed' : 'rgba(255,255,255,0.1)', color: (selectedProduct.inStock && selectedProduct.stock > 0) ? '#fff' : '#a1a1aa', border: 'none', borderRadius: '12px', fontWeight: 600, cursor: (selectedProduct.inStock && selectedProduct.stock > 0) ? 'pointer' : 'not-allowed', fontSize: '16px', transition: 'transform 0.2s, background 0.2s', display: 'flex', alignItems: 'center', gap: '12px' }}
+                    disabled={!(selectedProduct.inStock && selectedProduct.stock > 0)}
+                    onMouseOver={(e) => { if(selectedProduct.inStock && selectedProduct.stock > 0) e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                    onMouseOut={(e) => { e.currentTarget.style.transform = 'none'; }}
+                  >
+                    <ShoppingBag size={20} />
+                    {(selectedProduct.inStock && selectedProduct.stock > 0) ? 'Agregar al Carrito' : 'Agotado'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
