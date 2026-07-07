@@ -320,12 +320,12 @@ function ProductForm({ initialData, categories, onSubmit, submitLabel, loading }
   }, [categories, form.categoryId]);
 
   return (
-    <form onSubmit={async e => { e.preventDefault(); await onSubmit(form); }} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px" }}>
+    <form onSubmit={async e => { e.preventDefault(); await onSubmit(form); }} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 250px), 1fr))", gap: "20px", minWidth: 0 }}>
       <InputField label="Nombre del Producto" name="name" required fullWidth value={form.name} onChange={set("name")} placeholder="Ej: Gibson Les Paul" />
       <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
         <label style={{ fontSize: "12px", fontWeight: 600, color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>Categoría <span style={{ color: s.purple }}>*</span></label>
         <select name="categoryId" value={form.categoryId} onChange={e => set("categoryId")(e.target.value)} required
-          style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none" }}>
+          style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none", width: "100%", boxSizing: "border-box" }}>
           {categories.map(c => <option key={c.id} value={c.id} style={{ background: s.surface }}>{c.name.charAt(0).toUpperCase() + c.name.slice(1)}</option>)}
         </select>
       </div>
@@ -1344,7 +1344,7 @@ export default function AdminClient({
                     <input name="discount" type="number" min="0" max="100" step="0.1" required defaultValue={editPromotion?.discount || ""} placeholder="Ej: 30"
                       style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none" }} />
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))", gap: "16px" }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                       <label style={{ fontSize: "12px", fontWeight: 600, color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>Fecha de Inicio <span style={{ color: s.purple }}>*</span></label>
                       <input name="startDate" type="datetime-local" required defaultValue={editPromotion ? new Date(editPromotion.startDate).toISOString().slice(0, 16) : ""}
@@ -1360,7 +1360,7 @@ export default function AdminClient({
                     <label style={{ fontSize: "12px", fontWeight: 600, color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>Tipo de Aplicación <span style={{ color: s.purple }}>*</span></label>
                     <select name="targetType" required value={promoTargetType}
                       onChange={e => setPromoTargetType(e.target.value)}
-                      style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none", colorScheme: "dark" }}>
+                      style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none", colorScheme: "dark", width: "100%", boxSizing: "border-box" }}>
                       <option value="ALL" style={{ background: s.surface, color: s.text }}>Toda la tienda</option>
                       <option value="CATEGORY" style={{ background: s.surface, color: s.text }}>Categoría Específica</option>
                       <option value="PRODUCT" style={{ background: s.surface, color: s.text }}>Producto Específico</option>
@@ -1371,7 +1371,7 @@ export default function AdminClient({
                     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                       <label style={{ fontSize: "12px", fontWeight: 600, color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>Seleccionar Categoría <span style={{ color: s.purple }}>*</span></label>
                       <select name="targetId" required defaultValue={editPromotion?.targetId || ""}
-                        style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none", colorScheme: "dark" }}>
+                        style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none", colorScheme: "dark", width: "100%", boxSizing: "border-box" }}>
                         <option value="" disabled style={{ background: s.surface, color: s.text }}>Elige una categoría...</option>
                         {categories.map(c => <option key={c.id} value={c.id} style={{ background: s.surface, color: s.text }}>{c.name}</option>)}
                       </select>
@@ -1384,7 +1384,7 @@ export default function AdminClient({
                       <input type="text" placeholder="Buscar producto..." value={promoProductSearch} onChange={e => setPromoProductSearch(e.target.value)}
                         style={{ padding: "8px 14px", background: "rgba(0,0,0,0.15)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "8px", fontSize: "13px", outline: "none", marginBottom: "4px" }} />
                       <select name="targetId" required defaultValue={editPromotion?.targetId || ""}
-                        style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none", colorScheme: "dark" }}>
+                        style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none", colorScheme: "dark", width: "100%", boxSizing: "border-box" }}>
                         <option value="" disabled style={{ background: s.surface, color: s.text }}>Elige un producto...</option>
                         {products.filter(p => p.name.toLowerCase().includes(promoProductSearch.toLowerCase())).map(p => (
                           <option key={p.id} value={p.id} style={{ background: s.surface, color: s.text }}>{p.name} (S/ {p.price})</option>
