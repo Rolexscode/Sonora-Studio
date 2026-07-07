@@ -413,6 +413,8 @@ export default function AdminClient({
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showPromotionModal, setShowPromotionModal] = useState(false);
   const [editPromotion, setEditPromotion] = useState<Promotion | null>(null);
+  const [promoTargetType, setPromoTargetType] = useState("ALL");
+  const [promoProductSearch, setPromoProductSearch] = useState("");
   const [receiptSale, setReceiptSale] = useState<Purchase | null>(null);
 
   const displayProducts = products
@@ -833,7 +835,7 @@ export default function AdminClient({
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }} className="no-print">
                 <h2 style={{ margin: 0, fontSize: "18px", fontWeight: 800 }}>Promociones</h2>
-                <button onClick={() => setShowPromotionModal(true)} style={{ padding: "10px 18px", background: s.purple, color: "#fff", border: "none", borderRadius: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                <button onClick={() => { setPromoTargetType("ALL"); setShowPromotionModal(true); }} style={{ padding: "10px 18px", background: s.purple, color: "#fff", border: "none", borderRadius: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
                   <Plus size={16} /> Nueva Promo
                 </button>
               </div>
@@ -857,8 +859,8 @@ export default function AdminClient({
                       const active = p.isActive && now >= start && now <= end;
                       
                       let appliesTo = "Toda la tienda";
-                      if (p.targetType === "CATEGORY") appliesTo = `Categoría ID: ${p.targetId}`;
-                      if (p.targetType === "PRODUCT") appliesTo = `Producto ID: ${p.targetId}`;
+                      if (p.targetType === "CATEGORY") appliesTo = `Categoría: ${categories.find(c => c.id === p.targetId)?.name || p.targetId}`;
+                      if (p.targetType === "PRODUCT") appliesTo = `Producto: ${products.find(prod => prod.id === p.targetId)?.name || p.targetId}`;
 
                       return (
                         <tr key={p.id} style={{ borderBottom: `1px solid ${s.border}`, transition: "background 0.15s" }}
@@ -876,7 +878,7 @@ export default function AdminClient({
                           </td>
                           <td style={{ padding: "12px 18px", fontSize: "13px" }}>{appliesTo}</td>
                           <td style={{ padding: "12px 18px", textAlign: "right" }}>
-                            <button onClick={() => setEditPromotion(p)} style={{ background: "none", border: "none", color: s.sky, cursor: "pointer", marginRight: "12px" }}>
+                            <button onClick={() => { setPromoTargetType(p.targetType); setEditPromotion(p); }} style={{ background: "none", border: "none", color: s.sky, cursor: "pointer", marginRight: "12px" }}>
                               <Edit2 size={16} />
                             </button>
                             <button onClick={async () => {
@@ -1193,24 +1195,40 @@ export default function AdminClient({
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                     <label style={{ fontSize: "12px", fontWeight: 600, color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>Tipo de Aplicación <span style={{ color: s.purple }}>*</span></label>
-                    <select name="targetType" required defaultValue={editPromotion?.targetType || "ALL"}
-                      onChange={e => {
-                        const targetIdContainer = document.getElementById('targetIdContainer');
-                        if (targetIdContainer) {
-                          targetIdContainer.style.display = e.target.value === 'ALL' ? 'none' : 'flex';
-                        }
-                      }}
+                    <select name="targetType" required value={promoTargetType}
+                      onChange={e => setPromoTargetType(e.target.value)}
                       style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none" }}>
                       <option value="ALL">Toda la tienda</option>
                       <option value="CATEGORY">Categoría Específica</option>
                       <option value="PRODUCT">Producto Específico</option>
                     </select>
                   </div>
-                  <div id="targetIdContainer" style={{ display: editPromotion?.targetType === 'ALL' || !editPromotion ? 'none' : 'flex', flexDirection: "column", gap: "6px" }}>
-                    <label style={{ fontSize: "12px", fontWeight: 600, color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>ID Objetivo (Categoría o Producto) <span style={{ color: s.purple }}>*</span></label>
-                    <input name="targetId" type="number" defaultValue={editPromotion?.targetId || ""} placeholder="Ej: 1"
-                      style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none" }} />
-                  </div>
+                  
+                  {promoTargetType === "CATEGORY" && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <label style={{ fontSize: "12px", fontWeight: 600, color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>Seleccionar Categoría <span style={{ color: s.purple }}>*</span></label>
+                      <select name="targetId" required defaultValue={editPromotion?.targetId || ""}
+                        style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none" }}>
+                        <option value="" disabled>Elige una categoría...</option>
+                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </div>
+                  )}
+
+                  {promoTargetType === "PRODUCT" && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <label style={{ fontSize: "12px", fontWeight: 600, color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>Seleccionar Producto <span style={{ color: s.purple }}>*</span></label>
+                      <input type="text" placeholder="Buscar producto..." value={promoProductSearch} onChange={e => setPromoProductSearch(e.target.value)}
+                        style={{ padding: "8px 14px", background: "rgba(0,0,0,0.15)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "8px", fontSize: "13px", outline: "none", marginBottom: "4px" }} />
+                      <select name="targetId" required defaultValue={editPromotion?.targetId || ""}
+                        style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none" }}>
+                        <option value="" disabled>Elige un producto...</option>
+                        {products.filter(p => p.name.toLowerCase().includes(promoProductSearch.toLowerCase())).map(p => (
+                          <option key={p.id} value={p.id}>{p.name} (S/ {p.price})</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", marginTop: "8px" }}>
                     <input type="checkbox" name="isActive" defaultChecked={editPromotion ? editPromotion.isActive : true} style={{ width: "16px", height: "16px", accentColor: s.purple }} />
                     <span style={{ fontSize: "14px" }}>Promoción Activa</span>
