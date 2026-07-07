@@ -118,12 +118,14 @@ export default function PurchasesClient({ purchases }: PurchasesClientProps) {
       {selectedPurchase && (
         <div className="print-modal-overlay" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }} onClick={() => setSelectedPurchase(null)}>
           <div className="print-modal-content" style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
-            <button className="no-print" onClick={() => setSelectedPurchase(null)} style={{ position: "absolute", top: "-12px", right: "-36px", background: "none", border: "none", color: "#fff", cursor: "pointer" }}>
-              <X size={28} />
-            </button>
-            <button className="no-print" onClick={() => window.print()} style={{ position: "absolute", top: "-12px", right: "12px", background: "none", border: "none", color: "#6b7280", cursor: "pointer" }} title="Imprimir Boleta">
-              <Printer size={24} />
-            </button>
+            <div className="no-print" style={{ position: "absolute", top: "-12px", right: "-76px", display: "flex", gap: "12px" }}>
+              <button onClick={() => window.print()} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", opacity: 0.8 }} title="Imprimir Boleta" onMouseOver={(e) => e.currentTarget.style.opacity = "1"} onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"}>
+                <Printer size={24} />
+              </button>
+              <button onClick={() => setSelectedPurchase(null)} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", opacity: 0.8 }} onMouseOver={(e) => e.currentTarget.style.opacity = "1"} onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"}>
+                <X size={28} />
+              </button>
+            </div>
             <ReceiptCard purchase={selectedPurchase} />
           </div>
         </div>
