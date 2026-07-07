@@ -1197,10 +1197,10 @@ export default function AdminClient({
                     <label style={{ fontSize: "12px", fontWeight: 600, color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>Tipo de Aplicación <span style={{ color: s.purple }}>*</span></label>
                     <select name="targetType" required value={promoTargetType}
                       onChange={e => setPromoTargetType(e.target.value)}
-                      style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none" }}>
-                      <option value="ALL">Toda la tienda</option>
-                      <option value="CATEGORY">Categoría Específica</option>
-                      <option value="PRODUCT">Producto Específico</option>
+                      style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none", colorScheme: "dark" }}>
+                      <option value="ALL" style={{ background: s.surface, color: s.text }}>Toda la tienda</option>
+                      <option value="CATEGORY" style={{ background: s.surface, color: s.text }}>Categoría Específica</option>
+                      <option value="PRODUCT" style={{ background: s.surface, color: s.text }}>Producto Específico</option>
                     </select>
                   </div>
                   
@@ -1208,9 +1208,9 @@ export default function AdminClient({
                     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                       <label style={{ fontSize: "12px", fontWeight: 600, color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>Seleccionar Categoría <span style={{ color: s.purple }}>*</span></label>
                       <select name="targetId" required defaultValue={editPromotion?.targetId || ""}
-                        style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none" }}>
-                        <option value="" disabled>Elige una categoría...</option>
-                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none", colorScheme: "dark" }}>
+                        <option value="" disabled style={{ background: s.surface, color: s.text }}>Elige una categoría...</option>
+                        {categories.map(c => <option key={c.id} value={c.id} style={{ background: s.surface, color: s.text }}>{c.name}</option>)}
                       </select>
                     </div>
                   )}
@@ -1221,10 +1221,10 @@ export default function AdminClient({
                       <input type="text" placeholder="Buscar producto..." value={promoProductSearch} onChange={e => setPromoProductSearch(e.target.value)}
                         style={{ padding: "8px 14px", background: "rgba(0,0,0,0.15)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "8px", fontSize: "13px", outline: "none", marginBottom: "4px" }} />
                       <select name="targetId" required defaultValue={editPromotion?.targetId || ""}
-                        style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none" }}>
-                        <option value="" disabled>Elige un producto...</option>
+                        style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none", colorScheme: "dark" }}>
+                        <option value="" disabled style={{ background: s.surface, color: s.text }}>Elige un producto...</option>
                         {products.filter(p => p.name.toLowerCase().includes(promoProductSearch.toLowerCase())).map(p => (
-                          <option key={p.id} value={p.id}>{p.name} (S/ {p.price})</option>
+                          <option key={p.id} value={p.id} style={{ background: s.surface, color: s.text }}>{p.name} (S/ {p.price})</option>
                         ))}
                       </select>
                     </div>
