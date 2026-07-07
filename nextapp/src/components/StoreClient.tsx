@@ -10,7 +10,8 @@ import { createPurchase } from "@/app/actions";
 interface Product {
   id: number;
   name: string;
-  category: string;
+  categoryId: number | null;
+  category: { id: number; name: string } | null;
   price: number;
   rating: number;
   inStock: boolean;
@@ -21,7 +22,7 @@ interface Product {
   image: string;
 }
 
-export default function StoreClient({ initialProducts, session }: { initialProducts: Product[], session: { id: number, name: string, email: string, role: string } | null }) {
+export default function StoreClient({ initialProducts, categories, session }: { initialProducts: Product[], categories: { id: number; name: string }[], session: { id: number, name: string, email: string, role: string } | null }) {
   const [category, setCategory] = useState("all");
   const [cart, setCart] = useState<Product[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -30,7 +31,7 @@ export default function StoreClient({ initialProducts, session }: { initialProdu
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const filteredProducts = initialProducts.filter(
-    (p) => category === "all" || p.category === category
+    (p) => category === "all" || p.category?.name === category
   );
 
   const groupedCart = cart.reduce((acc, item) => {
@@ -105,7 +106,7 @@ export default function StoreClient({ initialProducts, session }: { initialProdu
 
           <nav className="nav-desktop">
             <ul className="nav-links" style={{ display: 'flex', gap: '24px', listStyle: 'none' }}>
-              {['all', 'guitarras', 'bajos', 'teclados', 'baterias', 'estudio'].map((c) => (
+              {['all', ...categories.map(c => c.name)].map((c) => (
                 <li key={c}>
                   <button 
                     onClick={() => setCategory(c)} 
@@ -332,7 +333,7 @@ export default function StoreClient({ initialProducts, session }: { initialProdu
                 </div>
                 <div className="card-content" style={{ padding: '24px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '12px', color: '#a1a1aa', textTransform: 'uppercase' }}>{p.category}</span>
+                    <span style={{ fontSize: '12px', color: '#a1a1aa', textTransform: 'uppercase' }}>{p.category?.name || "Sin Categoría"}</span>
                     <span style={{ display: 'flex', alignItems: 'center', fontSize: '12px', color: '#fbbf24' }}><Star size={12} fill="#fbbf24" style={{ marginRight: '4px' }}/> {p.rating}</span>
                   </div>
                   <h3 style={{ fontSize: '18px', marginBottom: '8px', lineHeight: 1.3 }}>{p.name}</h3>

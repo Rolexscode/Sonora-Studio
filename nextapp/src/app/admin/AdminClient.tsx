@@ -1,6 +1,6 @@
 "use client";
 
-import { addProduct, updateProduct, deleteProduct, updateUserRole } from "@/app/actions";
+import { addProduct, updateProduct, deleteProduct, updateUserRole, addCategory, updateCategory, deleteCategory } from "@/app/actions";
 import { logout } from "@/app/auth-actions";
 import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
@@ -13,7 +13,7 @@ import {
 import { uploadProductImage } from "@/lib/supabase";
 
 interface Product {
-  id: number; name: string; category: string; price: number;
+  id: number; name: string; categoryId: number | null; category: { id: number; name: string } | null; price: number;
   rating: number; inStock: boolean; stock: number; isNew: boolean; desc: string; specs: string; image: string;
 }
 interface Purchase {
@@ -25,8 +25,7 @@ interface UserWithStats {
   purchases: { total: number }[];
 }
 
-type Tab = "dashboard" | "products" | "sales" | "customers" | "admins";
-const CATEGORIES = ["guitarras", "bajos", "teclados", "baterias", "estudio"];
+type Tab = "dashboard" | "products" | "categories" | "sales" | "customers" | "admins";
 
 const s = {
   bg: "#080a12", surface: "#0f1120", card: "#141728",
@@ -287,16 +286,16 @@ function SpecsEditor({ value, onChange }: { value: SpecsEntry[]; onChange: (v: S
 
 // ─── Form helpers ────────────────────────────────────────────
 function emptyForm() {
-  return { name: "", category: "guitarras", price: "", rating: "4.5", stock: "0", desc: "", image: "", inStock: true, isNew: true, specs: [] as SpecsEntry[] };
+  return { name: "", categoryId: "", price: "", rating: "4.5", stock: "0", desc: "", image: "", inStock: true, isNew: true, specs: [] as SpecsEntry[] };
 }
 function productToForm(p: Product) {
   let specs: SpecsEntry[] = [];
   try { const obj = JSON.parse(p.specs); specs = Object.entries(obj).map(([key, value]) => ({ key, value: String(value) })); } catch { /* empty */ }
-  return { name: p.name, category: p.category, price: String(p.price), rating: String(p.rating), stock: String(p.stock || 0), desc: p.desc, image: p.image, inStock: p.inStock, isNew: p.isNew, specs };
+  return { name: p.name, categoryId: String(p.categoryId), price: String(p.price), rating: String(p.rating), stock: String(p.stock || 0), desc: p.desc, image: p.image, inStock: p.inStock, isNew: p.isNew, specs };
 }
 function formToFormData(form: ReturnType<typeof emptyForm>) {
   const fd = new FormData();
-  fd.set("name", form.name); fd.set("category", form.category); fd.set("price", form.price);
+  fd.set("name", form.name); fd.set("categoryId", form.categoryId); fd.set("price", form.price);
   fd.set("rating", form.rating); fd.set("stock", form.stock); fd.set("desc", form.desc); fd.set("image", form.image);
   fd.set("inStock", String(form.inStock)); fd.set("isNew", String(form.isNew));
   const specsObj: Record<string, string> = {};
@@ -306,19 +305,27 @@ function formToFormData(form: ReturnType<typeof emptyForm>) {
 }
 
 // ─── Product Form ────────────────────────────────────────────
-function ProductForm({ initialData, onSubmit, submitLabel, loading }:
-  { initialData: ReturnType<typeof emptyForm>; onSubmit: (f: ReturnType<typeof emptyForm>) => Promise<void>; submitLabel: string; loading: boolean }) {
+function ProductForm({ initialData, categories, onSubmit, submitLabel, loading }:
+  { initialData: ReturnType<typeof emptyForm>; categories: {id: number, name: string}[]; onSubmit: (f: ReturnType<typeof emptyForm>) => Promise<void>; submitLabel: string; loading: boolean }) {
   const [form, setForm] = useState(initialData);
   const set = (key: keyof typeof form) => (v: unknown) => setForm(f => ({ ...f, [key]: v }));
+
+  import("react").then(React => {
+    React.useEffect(() => {
+      if (!form.categoryId && categories.length > 0) {
+        setForm(f => ({...f, categoryId: String(categories[0].id)}));
+      }
+    }, [categories, form.categoryId]);
+  });
 
   return (
     <form onSubmit={async e => { e.preventDefault(); await onSubmit(form); }} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px" }}>
       <InputField label="Nombre del Producto" name="name" required fullWidth value={form.name} onChange={set("name")} placeholder="Ej: Gibson Les Paul" />
       <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
         <label style={{ fontSize: "12px", fontWeight: 600, color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>Categoría <span style={{ color: s.purple }}>*</span></label>
-        <select name="category" value={form.category} onChange={e => set("category")(e.target.value)}
+        <select name="categoryId" value={form.categoryId} onChange={e => set("categoryId")(e.target.value)} required
           style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none" }}>
-          {CATEGORIES.map(c => <option key={c} value={c} style={{ background: s.surface }}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
+          {categories.map(c => <option key={c.id} value={c.id} style={{ background: s.surface }}>{c.name.charAt(0).toUpperCase() + c.name.slice(1)}</option>)}
         </select>
       </div>
       <InputField label="Precio (S/)" name="price" type="number" step="0.01" min="0" required value={form.price} onChange={set("price")} placeholder="0.00" />
@@ -377,21 +384,24 @@ function StatCard({ label, value, icon, color, muted, sparkData, trend }:
 
 // ─── Main Component ──────────────────────────────────────────
 export default function AdminClient(
-  { session, products = [], purchases = [], users = [] }: 
-  { session: { id: number; name: string; email: string; role: string }; products?: Product[]; purchases?: Purchase[]; users?: UserWithStats[] }) {
+  { session, products = [], purchases = [], users = [], categories = [] }: 
+  { session: { id: number; name: string; email: string; role: string }; products?: Product[]; purchases?: Purchase[]; users?: UserWithStats[]; categories?: {id: number, name: string}[] }) {
   const [tab, setTab] = useState<Tab>("dashboard");
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [loading, setLoading] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
+  const [editCategory, setEditCategory] = useState<{ id: number, name: string } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchCategoryQuery, setSearchCategoryQuery] = useState("");
   const [searchSalesQuery, setSearchSalesQuery] = useState("");
   const [searchCustomersQuery, setSearchCustomersQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [receiptSale, setReceiptSale] = useState<Purchase | null>(null);
 
   const displayProducts = products
-    .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.category.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || (p.category?.name || "").toLowerCase().includes(searchQuery.toLowerCase()))
     .slice()
     .reverse();
 
@@ -424,7 +434,7 @@ export default function AdminClient(
 
   const categoriesMap = new Map<string, number>();
   products.forEach(p => {
-    const cat = p.category.toLowerCase();
+    const cat = p.category?.name?.toLowerCase() || "sin categoría";
     categoriesMap.set(cat, (categoriesMap.get(cat) || 0) + 1);
   });
   const categoryData = Array.from(categoriesMap.entries())
@@ -449,6 +459,33 @@ export default function AdminClient(
     finally { setLoading(false); }
   };
 
+  const handleAddCategory = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const name = new FormData(e.currentTarget).get("name") as string;
+    if (!name) return;
+    setLoading(true);
+    try { await addCategory(name); showToast("Categoría agregada."); setShowCategoryModal(false); }
+    catch { showToast("Error al crear categoría.", false); }
+    finally { setLoading(false); }
+  };
+  const handleUpdateCategory = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editCategory) return;
+    const name = new FormData(e.currentTarget).get("name") as string;
+    if (!name) return;
+    setLoading(true);
+    try { await updateCategory(editCategory.id, name); setEditCategory(null); showToast("Categoría actualizada."); }
+    catch { showToast("Error al actualizar.", false); }
+    finally { setLoading(false); }
+  };
+  const handleDeleteCategory = async (id: number) => {
+    if (!confirm("¿Eliminar esta categoría? Se eliminarán los productos asociados.")) return;
+    setLoading(true);
+    try { await deleteCategory(id); showToast("Categoría eliminada."); }
+    catch { showToast("Error al eliminar.", false); }
+    finally { setLoading(false); }
+  };
+
   const handleRoleChange = async (userId: number, currentRole: string) => {
     const newRole = currentRole === "ADMIN" ? "CUSTOMER" : "ADMIN";
     if (!confirm(`¿Estás seguro de cambiar el rol a ${newRole}?`)) return;
@@ -467,6 +504,7 @@ export default function AdminClient(
 
   const navItems: { id: Tab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
+    { id: "categories", label: "Categorías", icon: <Package size={18} />, badge: categories.length },
     { id: "products", label: "Productos", icon: <Package size={18} />, badge: products.length },
     { id: "sales", label: "Ventas", icon: <ShoppingBag size={18} />, badge: purchases.length },
     { id: "customers", label: "Clientes", icon: <Users size={18} />, badge: users.filter(u => u.role === "CUSTOMER").length },
@@ -688,6 +726,56 @@ export default function AdminClient(
 
           {/* ── ADD PRODUCT WAS REMOVED FROM HERE ── */}
 
+          {/* ── CATEGORIES TABLE ── */}
+          {tab === "categories" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }} className="no-print">
+                <input 
+                  type="text" 
+                  placeholder="Buscar categorías..." 
+                  value={searchCategoryQuery}
+                  onChange={e => setSearchCategoryQuery(e.target.value)}
+                  style={{ padding: "10px 14px", background: s.card, border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none", width: "300px", maxWidth: "100%" }}
+                />
+                <button onClick={() => setShowCategoryModal(true)} style={{ padding: "10px 18px", background: s.purple, color: "#fff", border: "none", borderRadius: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                  <Plus size={16} /> Nueva Categoría
+                </button>
+              </div>
+              <div style={{ background: s.card, borderRadius: "20px", border: `1px solid ${s.border}`, overflow: "hidden" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: "400px" }}>
+                  <thead style={{ background: "rgba(255,255,255,0.02)", borderBottom: `1px solid ${s.border}` }}>
+                    <tr>
+                      <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>ID</th>
+                      <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>Nombre</th>
+                      <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700, textAlign: "right" }}>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {categories.filter(c => c.name.toLowerCase().includes(searchCategoryQuery.toLowerCase())).map(c => (
+                      <tr key={c.id} style={{ borderBottom: `1px solid ${s.border}`, transition: "background 0.15s" }}
+                        onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.015)")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+                        <td style={{ padding: "12px 18px", fontSize: "13px", color: s.muted }}>#{c.id}</td>
+                        <td style={{ padding: "12px 18px", fontSize: "14px", fontWeight: 600 }}>{c.name}</td>
+                        <td style={{ padding: "12px 18px", textAlign: "right" }}>
+                          <button onClick={() => setEditCategory(c)} style={{ background: "none", border: "none", color: s.sky, cursor: "pointer", marginRight: "12px" }}>
+                            <Edit2 size={16} />
+                          </button>
+                          <button onClick={() => handleDeleteCategory(c.id)} style={{ background: "none", border: "none", color: s.red, cursor: "pointer" }}>
+                            <Trash2 size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {categories.length === 0 && (
+                      <tr><td colSpan={3} style={{ padding: "40px", textAlign: "center", color: s.muted }}>No hay categorías registradas.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {/* ── PRODUCTS TABLE ── */}
           {tab === "products" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -737,7 +825,7 @@ export default function AdminClient(
                           </div>
                         </td>
                         <td style={{ padding: "12px 18px" }}>
-                          <span style={{ fontSize: "11px", padding: "3px 8px", background: s.purpleMuted, color: s.purpleLight, borderRadius: "6px", fontWeight: 600, textTransform: "capitalize" }}>{p.category}</span>
+                          <span style={{ fontSize: "11px", padding: "3px 8px", background: s.purpleMuted, color: s.purpleLight, borderRadius: "6px", fontWeight: 600, textTransform: "capitalize" }}>{p.category?.name || "Sin Categoría"}</span>
                         </td>
                         <td style={{ padding: "12px 18px", fontSize: "14px", fontWeight: 700 }}>S/ {p.price.toFixed(2)}</td>
                         <td style={{ padding: "12px 18px", fontSize: "13px" }}>{p.stock} un.</td>
@@ -961,7 +1049,7 @@ export default function AdminClient(
                 </button>
               </div>
               <div style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
-                <ProductForm key={editProduct.id} initialData={productToForm(editProduct)} onSubmit={handleUpdate} submitLabel="Guardar Cambios" loading={loading} />
+                <ProductForm key={editProduct.id} initialData={productToForm(editProduct)} categories={categories} onSubmit={handleUpdate} submitLabel="Guardar Cambios" loading={loading} />
               </div>
             </div>
           </div>
@@ -982,11 +1070,39 @@ export default function AdminClient(
                 </button>
               </div>
               <div style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
-                <ProductForm key="add" initialData={emptyForm()} onSubmit={handleAdd} submitLabel="Crear Producto" loading={loading} />
+                <ProductForm key="add" initialData={emptyForm()} categories={categories} onSubmit={handleAdd} submitLabel="Crear Producto" loading={loading} />
               </div>
             </div>
           </div>
         )}
+        {/* ── CATEGORY MODAL ── */}
+        {(showCategoryModal || editCategory) && (
+          <div onClick={e => { if (e.target === e.currentTarget) { setShowCategoryModal(false); setEditCategory(null); } }}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", animation: "fadeIn 0.2s ease" }}>
+            <div style={{ background: s.surface, border: `1px solid ${s.border}`, borderRadius: "24px", width: "100%", maxWidth: "400px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+              <div style={{ padding: "20px 24px", borderBottom: `1px solid ${s.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 800 }}>{editCategory ? "Editar Categoría" : "Nueva Categoría"}</h2>
+                <button onClick={() => { setShowCategoryModal(false); setEditCategory(null); }} style={{ background: "rgba(255,255,255,0.06)", border: "none", borderRadius: "8px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: s.text }}>
+                  <X size={16} />
+                </button>
+              </div>
+              <div style={{ padding: "24px" }}>
+                <form onSubmit={editCategory ? handleUpdateCategory : handleAddCategory} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>Nombre <span style={{ color: s.purple }}>*</span></label>
+                    <input name="name" required defaultValue={editCategory?.name || ""} placeholder="Ej: Guitarras Acústicas"
+                      style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none" }} />
+                  </div>
+                  <button type="submit" disabled={loading}
+                    style={{ padding: "12px", background: loading ? "rgba(124,58,237,0.5)" : s.purple, color: "#fff", border: "none", borderRadius: "10px", fontWeight: 700, fontSize: "14px", cursor: loading ? "not-allowed" : "pointer", marginTop: "8px" }}>
+                    {loading ? "Guardando..." : "Guardar Categoría"}
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ── RECEIPT MODAL ── */}
         {receiptSale && (
           <div onClick={e => { if (e.target === e.currentTarget) setReceiptSale(null); }}
