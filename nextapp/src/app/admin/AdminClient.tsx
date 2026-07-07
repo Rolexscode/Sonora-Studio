@@ -8,7 +8,7 @@ import {
   LogOut, Package, PlusCircle, ShoppingBag, Trash2,
   LayoutDashboard, Edit2, X, Upload, CheckCircle,
   AlertCircle, Plus, Minus, TrendingUp, Users, Eye,
-  Download, FileText, Menu, ChevronLeft, Mail, Percent,
+  Download, FileText, Menu, ChevronLeft, Mail, Percent, BarChart2
 } from "lucide-react";
 import { uploadProductImage } from "@/lib/supabase";
 
@@ -28,7 +28,7 @@ interface Promotion {
   id: number; title: string; discount: number; startDate: Date; endDate: Date; isActive: boolean; targetType: string; targetId: number | null;
 }
 
-type Tab = "dashboard" | "products" | "categories" | "promotions" | "sales" | "customers" | "admins";
+type Tab = "dashboard" | "products" | "categories" | "promotions" | "sales" | "customers" | "admins" | "reports";
 
 const s = {
   bg: "#080a12", surface: "#0f1120", card: "#141728",
@@ -417,6 +417,13 @@ export default function AdminClient({
   const [promoProductSearch, setPromoProductSearch] = useState("");
   const [receiptSale, setReceiptSale] = useState<Purchase | null>(null);
 
+  // Report state
+  const [reportStartDate, setReportStartDate] = useState("");
+  const [reportEndDate, setReportEndDate] = useState("");
+  const [reportCategoryId, setReportCategoryId] = useState("");
+  const [reportProductId, setReportProductId] = useState("");
+  const [reportMonth, setReportMonth] = useState("");
+
   const displayProducts = products
     .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || (p.category?.name || "").toLowerCase().includes(searchQuery.toLowerCase()))
     .slice()
@@ -555,12 +562,52 @@ export default function AdminClient({
     await deleteProduct(id); showToast("Producto eliminado.");
   };
 
+  // Report calculation logic
+  const reportFilteredPurchases = purchases.filter(p => {
+    let match = true;
+    const d = new Date(p.createdAt);
+    if (reportStartDate) {
+      const sDate = new Date(reportStartDate + "T00:00:00");
+      if (d < sDate) match = false;
+    }
+    if (reportEndDate) {
+      const eDate = new Date(reportEndDate + "T23:59:59");
+      if (d > eDate) match = false;
+    }
+    if (reportMonth) {
+      const mStr = d.toISOString().slice(0, 7);
+      if (mStr !== reportMonth) match = false;
+    }
+    if (reportCategoryId || reportProductId) {
+      try {
+        const items = JSON.parse(p.items || "[]");
+        let hasItem = false;
+        for (const item of items) {
+          const prod = products.find(prod => prod.id === item.productId);
+          if (reportProductId && String(item.productId) === reportProductId) hasItem = true;
+          if (reportCategoryId && prod && String(prod.categoryId) === reportCategoryId) hasItem = true;
+        }
+        if (!hasItem) match = false;
+      } catch { match = false; }
+    }
+    return match;
+  });
+
+  const reportTotalRevenue = reportFilteredPurchases.reduce((acc, p) => acc + p.total, 0);
+  const reportTotalItemsSold = reportFilteredPurchases.reduce((acc, p) => {
+    try {
+      const items = JSON.parse(p.items || "[]");
+      return acc + items.reduce((sum: number, i: any) => sum + i.quantity, 0);
+    } catch { return acc; }
+  }, 0);
+
   const navItems: { id: Tab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
     { id: "promotions", label: "Promociones", icon: <Percent size={18} />, badge: promotions.length },
     { id: "categories", label: "Categorías", icon: <Package size={18} />, badge: categories.length },
     { id: "products", label: "Productos", icon: <Package size={18} />, badge: products.length },
     { id: "sales", label: "Ventas", icon: <ShoppingBag size={18} />, badge: purchases.length },
+    { id: "reports", label: "Reportes", icon: <BarChart2 size={18} /> },
     { id: "customers", label: "Clientes", icon: <Users size={18} />, badge: users.filter(u => u.role === "CUSTOMER").length },
     { id: "admins", label: "Administradores", icon: <CheckCircle size={18} />, badge: users.filter(u => u.role === "ADMIN").length },
   ];
@@ -669,10 +716,16 @@ export default function AdminClient({
         }
 
         @media print {
-          .admin-sidebar, .no-print { display: none !important; }
-          .admin-main { margin: 0 !important; padding: 16px !important; }
+          .admin-sidebar, .no-print, header { display: none !important; }
+          .admin-main { margin: 0 !important; padding: 0 !important; min-height: auto !important; background: white !important; }
           body { background: white !important; color: black !important; }
-          .print-table { display: block !important; }
+          .print-area { display: block !important; padding: 20px !important; }
+          .print-only { display: block !important; }
+          .print-card { background: white !important; border: 1px solid #ccc !important; box-shadow: none !important; margin-bottom: 10px; }
+          .print-card p { color: black !important; }
+          .print-table-wrapper { border: none !important; background: white !important; border-radius: 0 !important; }
+          .print-table th { background: #f0f0f0 !important; color: black !important; border-bottom: 2px solid #ccc !important; }
+          .print-table td { color: black !important; border-bottom: 1px solid #eee !important; }
         }
       `}</style>
 
@@ -1155,6 +1208,106 @@ export default function AdminClient({
                 </div>
               )}
             </div>
+            </div>
+          )}
+
+          {/* ── REPORTS ── */}
+          {tab === "reports" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+              <div className="no-print" style={{ display: "flex", flexDirection: "column", gap: "16px", background: s.card, borderRadius: "16px", padding: "20px", border: `1px solid ${s.border}` }}>
+                <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 700 }}>Filtros de Reporte</h2>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "11px", color: s.muted, fontWeight: 600, textTransform: "uppercase" }}>Desde</label>
+                    <input type="date" value={reportStartDate} onChange={e => setReportStartDate(e.target.value)} style={{ padding: "8px 12px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "8px", fontSize: "13px", outline: "none", colorScheme: "dark" }} />
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "11px", color: s.muted, fontWeight: 600, textTransform: "uppercase" }}>Hasta</label>
+                    <input type="date" value={reportEndDate} onChange={e => setReportEndDate(e.target.value)} style={{ padding: "8px 12px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "8px", fontSize: "13px", outline: "none", colorScheme: "dark" }} />
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "11px", color: s.muted, fontWeight: 600, textTransform: "uppercase" }}>Mes Específico</label>
+                    <input type="month" value={reportMonth} onChange={e => { setReportMonth(e.target.value); setReportStartDate(""); setReportEndDate(""); }} style={{ padding: "8px 12px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "8px", fontSize: "13px", outline: "none", colorScheme: "dark" }} />
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "11px", color: s.muted, fontWeight: 600, textTransform: "uppercase" }}>Categoría</label>
+                    <select value={reportCategoryId} onChange={e => setReportCategoryId(e.target.value)} style={{ padding: "8px 12px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "8px", fontSize: "13px", outline: "none" }}>
+                      <option value="" style={{ background: s.surface, color: s.text }}>Todas las categorías</option>
+                      {categories.map(c => <option key={c.id} value={c.id} style={{ background: s.surface, color: s.text }}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "11px", color: s.muted, fontWeight: 600, textTransform: "uppercase" }}>Producto</label>
+                    <select value={reportProductId} onChange={e => setReportProductId(e.target.value)} style={{ padding: "8px 12px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "8px", fontSize: "13px", outline: "none" }}>
+                      <option value="" style={{ background: s.surface, color: s.text }}>Todos los productos</option>
+                      {products.map(p => <option key={p.id} value={p.id} style={{ background: s.surface, color: s.text }}>{p.name}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                  <button onClick={() => { setReportStartDate(""); setReportEndDate(""); setReportMonth(""); setReportCategoryId(""); setReportProductId(""); }} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: s.text, padding: "8px 16px", borderRadius: "8px", fontSize: "13px", cursor: "pointer", fontWeight: 600 }}>Limpiar</button>
+                  <button onClick={() => window.print()} style={{ background: s.purple, color: "#fff", border: "none", padding: "8px 16px", borderRadius: "8px", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}><FileText size={16} /> Imprimir Reporte</button>
+                </div>
+              </div>
+
+              {/* Printable Area */}
+              <div className="print-area">
+                <div className="print-only" style={{ display: "none", marginBottom: "20px", borderBottom: "2px solid #000", paddingBottom: "10px" }}>
+                  <h1 style={{ margin: 0, fontSize: "24px" }}>Reporte de Ventas - Sonora Studio</h1>
+                  <p style={{ margin: 0, fontSize: "12px", color: "#666" }}>Generado el {new Date().toLocaleDateString()}</p>
+                </div>
+                
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", marginBottom: "24px" }}>
+                  <div style={{ background: s.card, borderRadius: "12px", padding: "20px", border: `1px solid ${s.border}` }} className="print-card">
+                    <p style={{ margin: "0 0 8px", fontSize: "13px", color: s.muted, fontWeight: 600 }}>Total Ingresos Filtrados</p>
+                    <p style={{ margin: 0, fontSize: "24px", fontWeight: 800, color: s.green }}>S/ {reportTotalRevenue.toFixed(2)}</p>
+                  </div>
+                  <div style={{ background: s.card, borderRadius: "12px", padding: "20px", border: `1px solid ${s.border}` }} className="print-card">
+                    <p style={{ margin: "0 0 8px", fontSize: "13px", color: s.muted, fontWeight: 600 }}>Órdenes Filtradas</p>
+                    <p style={{ margin: 0, fontSize: "24px", fontWeight: 800 }}>{reportFilteredPurchases.length}</p>
+                  </div>
+                  <div style={{ background: s.card, borderRadius: "12px", padding: "20px", border: `1px solid ${s.border}` }} className="print-card">
+                    <p style={{ margin: "0 0 8px", fontSize: "13px", color: s.muted, fontWeight: 600 }}>Artículos Vendidos</p>
+                    <p style={{ margin: 0, fontSize: "24px", fontWeight: 800 }}>{reportTotalItemsSold}</p>
+                  </div>
+                </div>
+
+                <div style={{ background: s.card, borderRadius: "20px", border: `1px solid ${s.border}`, overflow: "hidden" }} className="print-table-wrapper">
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }} className="print-table">
+                      <thead style={{ background: "rgba(255,255,255,0.02)", borderBottom: `1px solid ${s.border}` }}>
+                        <tr>
+                          <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>ID Venta</th>
+                          <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>Fecha</th>
+                          <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>Cliente</th>
+                          <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>Detalle de Productos</th>
+                          <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700, textAlign: "right" }}>Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportFilteredPurchases.length === 0 ? (
+                          <tr><td colSpan={5} style={{ padding: "40px", textAlign: "center", color: s.muted }}>No hay datos para el filtro seleccionado.</td></tr>
+                        ) : reportFilteredPurchases.map((p, i) => {
+                          const items = (() => { try { return JSON.parse(p.items || "[]"); } catch { return []; } })();
+                          return (
+                            <tr key={p.id} style={{ borderBottom: i < reportFilteredPurchases.length - 1 ? `1px solid ${s.border}` : "none" }}>
+                              <td style={{ padding: "12px 18px", fontSize: "13px", fontWeight: 600 }}>#{p.id}</td>
+                              <td style={{ padding: "12px 18px", fontSize: "13px" }}>{new Date(p.createdAt).toLocaleDateString()}</td>
+                              <td style={{ padding: "12px 18px", fontSize: "13px" }}>{p.user?.name || "Desconocido"}</td>
+                              <td style={{ padding: "12px 18px", fontSize: "12px", color: s.muted }}>
+                                {items.map((it: any, idx: number) => (
+                                  <div key={idx}>{it.quantity}x {it.name}</div>
+                                ))}
+                              </td>
+                              <td style={{ padding: "12px 18px", fontSize: "13px", fontWeight: 700, color: s.green, textAlign: "right" }}>S/ {p.total.toFixed(2)}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </main>
