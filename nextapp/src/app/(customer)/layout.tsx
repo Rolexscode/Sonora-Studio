@@ -43,15 +43,21 @@ export default async function CustomerLayout({ children }: { children: React.Rea
           .print-modal-overlay { position: absolute !important; background: transparent !important; align-items: flex-start !important; padding: 0 !important; }
           .print-modal-content { width: 100% !important; margin: 0 !important; }
         }
+        @media (max-width: 768px) {
+          .customer-wrapper { flex-direction: column !important; }
+          .customer-sidebar { width: 100% !important; height: auto !important; position: relative !important; border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.06) !important; z-index: 1 !important; }
+          .customer-main { margin-left: 0 !important; max-width: 100% !important; padding: 16px !important; }
+          .admin-table-wrapper { overflow-x: auto !important; }
+        }
         * { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
       `}</style>
 
-      <div style={{ display: "flex", minHeight: "100vh", background: s.bg, color: s.text, fontFamily: "var(--font-jakarta, system-ui, sans-serif)" }}>
+      <div className="customer-wrapper" style={{ display: "flex", minHeight: "100vh", background: s.bg, color: s.text, fontFamily: "var(--font-jakarta, system-ui, sans-serif)" }}>
         {/* Sidebar */}
-        <aside style={{ width: "260px", background: s.surface, borderRight: `1px solid ${s.border}`, display: "flex", flexDirection: "column", position: "fixed", height: "100vh", top: 0, left: 0, zIndex: 10 }}>
+        <aside className="customer-sidebar" style={{ width: "260px", background: s.surface, borderRight: `1px solid ${s.border}`, display: "flex", flexDirection: "column", position: "fixed", height: "100vh", top: 0, left: 0, zIndex: 10 }}>
           <div style={{ padding: "24px 20px", borderBottom: `1px solid ${s.border}` }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}

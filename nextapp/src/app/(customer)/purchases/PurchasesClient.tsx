@@ -38,7 +38,7 @@ export default function PurchasesClient({ purchases }: PurchasesClientProps) {
   });
 
   return (
-    <main style={{ flex: 1, marginLeft: "260px", padding: "36px 40px", maxWidth: "calc(100vw - 260px)" }}>
+    <main className="customer-main" style={{ flex: 1, marginLeft: "260px", padding: "36px 40px", maxWidth: "calc(100vw - 260px)" }}>
       <div className={selectedPurchase ? "hide-on-print" : ""}>
         <header style={{ marginBottom: "36px" }} className="no-print">
           <h1 style={{ margin: "0 0 4px", fontSize: "26px", fontWeight: 800, letterSpacing: "-0.02em" }}>Historial de Compras</h1>

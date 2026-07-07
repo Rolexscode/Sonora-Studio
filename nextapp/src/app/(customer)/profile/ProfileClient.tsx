@@ -47,7 +47,7 @@ export default function ProfileClient({ user }: { user: any }) {
   };
 
   return (
-    <main style={{ flex: 1, marginLeft: "260px", padding: "36px 40px", maxWidth: "calc(100vw - 260px)" }}>
+    <main className="customer-main" style={{ flex: 1, marginLeft: "260px", padding: "36px 40px", maxWidth: "calc(100vw - 260px)" }}>
       <header style={{ marginBottom: "36px" }}>
         <h1 style={{ margin: "0 0 4px", fontSize: "26px", fontWeight: 800, letterSpacing: "-0.02em" }}>Mi Perfil</h1>
         <p style={{ margin: 0, fontSize: "14px", color: s.muted }}>Actualiza tus datos personales y dirección de envío.</p>
