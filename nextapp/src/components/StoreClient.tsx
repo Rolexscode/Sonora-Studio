@@ -303,7 +303,7 @@ export default function StoreClient({ initialProducts, categories, session }: { 
             <div className="badge" style={{ display: 'inline-block', padding: '6px 12px', background: 'rgba(124, 58, 237, 0.2)', color: '#a78bfa', borderRadius: '16px', fontSize: '12px', fontWeight: 'bold', marginBottom: '16px' }}>NOVEDAD EN ESTUDIO</div>
             <h1 style={{ fontSize: '64px', lineHeight: 1.1, marginBottom: '24px', letterSpacing: '-0.03em' }}>Sonido puro.<br/><span style={{ color: '#7c3aed' }}>Diseño atemporal.</span></h1>
             <p style={{ fontSize: '18px', color: '#a1a1aa', marginBottom: '32px', lineHeight: 1.6 }}>Equipa tu estudio con instrumentos de precisión y tecnología de audio de nivel profesional.</p>
-            <button className="btn btn-primary" style={{ padding: '16px 32px', background: '#7c3aed', color: '#fff', borderRadius: '8px', border: 'none', fontWeight: 600, cursor: 'pointer', fontSize: '16px' }}>Explorar Catálogo</button>
+            <button onClick={() => document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' })} className="btn btn-primary" style={{ padding: '16px 32px', background: '#7c3aed', color: '#fff', borderRadius: '8px', border: 'none', fontWeight: 600, cursor: 'pointer', fontSize: '16px' }}>Explorar Catálogo</button>
           </motion.div>
         </div>
         <div className="hero-media" style={{ width: '50%', height: '500px', position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)' }}>
@@ -312,7 +312,7 @@ export default function StoreClient({ initialProducts, categories, session }: { 
       </section>
 
       {/* Product Grid */}
-      <section className="main-content container" style={{ padding: '40px 24px' }}>
+      <section id="catalog" className="main-content container" style={{ padding: '40px 24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
           <h2 style={{ fontSize: '32px' }}>Colección {category === 'all' ? 'Destacada' : category}</h2>
         </div>
