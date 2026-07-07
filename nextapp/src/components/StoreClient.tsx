@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, User, ShoppingCart, Star, Package, Sparkles, LogOut, LayoutDashboard, Menu, X, ShoppingBag, Plus, Minus, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -36,6 +36,7 @@ export default function StoreClient({ initialProducts, categories, session, acti
   const [category, setCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [cart, setCart] = useState<Product[]>([]);
+  const [isClient, setIsClient] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCart, setShowCart] = useState(false);
   const [checkoutMsg, setCheckoutMsg] = useState("");
@@ -43,6 +44,22 @@ export default function StoreClient({ initialProducts, categories, session, acti
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [checkoutStep, setCheckoutStep] = useState<"cart" | "payment">("cart");
   const [paymentMethods, setPaymentMethods] = useState<{method: string, amount: number}[]>([{ method: "Efectivo", amount: 0 }]);
+
+  useEffect(() => {
+    setIsClient(true);
+    const saved = localStorage.getItem("sonora-cart");
+    if (saved) {
+      try {
+        setCart(JSON.parse(saved));
+      } catch (e) {}
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isClient) {
+      localStorage.setItem("sonora-cart", JSON.stringify(cart));
+    }
+  }, [cart, isClient]);
 
   const filteredProducts = initialProducts.filter(
     (p) => {
