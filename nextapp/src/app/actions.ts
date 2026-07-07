@@ -121,3 +121,12 @@ export async function deletePromotion(id: number) {
   revalidatePath("/admin");
   revalidatePath("/");
 }
+
+export async function updateUserProfile(userId: number, data: { phone?: string; address?: string; city?: string; document?: string }) {
+  await prisma.user.update({
+    where: { id: userId },
+    data,
+  });
+  revalidatePath("/profile");
+  revalidatePath("/purchases");
+}

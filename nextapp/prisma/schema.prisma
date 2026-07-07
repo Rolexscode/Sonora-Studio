@@ -35,6 +35,10 @@ model User {
   password String
   name     String
   role     String @default("CUSTOMER") // ADMIN or CUSTOMER
+  phone    String?
+  address  String?
+  city     String?
+  document String?
   purchases Purchase[]
 }
 

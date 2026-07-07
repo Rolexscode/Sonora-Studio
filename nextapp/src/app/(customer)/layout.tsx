@@ -1,19 +1,19 @@
+import React from "react";
 import { getSession, logout } from "@/app/auth-actions";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Package, LogOut, ReceiptText, ArrowLeft, ShoppingBag } from "lucide-react";
+import { LogOut, ReceiptText, ArrowLeft, User as UserIcon } from "lucide-react";
 import { PrismaClient } from "@prisma/client";
-import PurchasesClient from "./PurchasesClient";
+import ClientSidebarLink from "./ClientSidebarLink";
 
 const prisma = new PrismaClient();
 
-export default async function PurchasesPage() {
+export default async function CustomerLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
   if (!session) redirect("/login");
 
   const purchases = await prisma.purchase.findMany({
     where: { userId: session.id },
-    orderBy: { createdAt: "desc" },
   });
 
   const totalSpent = purchases.reduce((acc, p) => acc + p.total, 0);
@@ -21,13 +21,11 @@ export default async function PurchasesPage() {
   const s = {
     bg: "#080a12",
     surface: "#0f1120",
-    card: "#141728",
     border: "rgba(255,255,255,0.06)",
     purple: "#7c3aed",
     purpleLight: "#a78bfa",
     purpleMuted: "rgba(124,58,237,0.12)",
     green: "#10b981",
-    greenMuted: "rgba(16,185,129,0.12)",
     red: "#f87171",
     redMuted: "rgba(248,113,113,0.12)",
     muted: "#6b7280",
@@ -49,7 +47,6 @@ export default async function PurchasesPage() {
       `}</style>
 
       <div style={{ display: "flex", minHeight: "100vh", background: s.bg, color: s.text, fontFamily: "var(--font-jakarta, system-ui, sans-serif)" }}>
-
         {/* Sidebar */}
         <aside style={{ width: "260px", background: s.surface, borderRight: `1px solid ${s.border}`, display: "flex", flexDirection: "column", position: "fixed", height: "100vh", top: 0, left: 0, zIndex: 10 }}>
           <div style={{ padding: "24px 20px", borderBottom: `1px solid ${s.border}` }}>
@@ -63,15 +60,16 @@ export default async function PurchasesPage() {
             </div>
           </div>
 
-          <nav style={{ padding: "16px 12px", flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
+          <nav style={{ padding: "16px 12px", flex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
             <p style={{ fontSize: "10px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "8px", paddingLeft: "8px" }}>Mi Cuenta</p>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "11px 14px", borderRadius: "10px", background: s.purpleMuted, color: s.purpleLight, border: `1px solid rgba(124,58,237,0.2)`, fontSize: "14px", fontWeight: 600 }}>
-              <ReceiptText size={18} /> Mis Compras
+            <ClientSidebarLink href="/purchases" icon={<ReceiptText size={18} />} label="Mis Compras">
               <span style={{ marginLeft: "auto", fontSize: "11px", background: s.purple, color: "#fff", padding: "2px 7px", borderRadius: "10px", fontWeight: 700 }}>
                 {purchases.length}
               </span>
-            </div>
+            </ClientSidebarLink>
+
+            <ClientSidebarLink href="/profile" icon={<UserIcon size={18} />} label="Mi Perfil" />
           </nav>
 
           {/* Stats */}
@@ -107,8 +105,7 @@ export default async function PurchasesPage() {
           </div>
         </aside>
 
-        {/* Main */}
-        <PurchasesClient purchases={purchases} />
+        {children}
       </div>
     </>
   );
