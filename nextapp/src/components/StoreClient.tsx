@@ -538,7 +538,7 @@ export default function StoreClient({ initialProducts, categories, session, acti
               initial={{ scale: 0.95, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 20 }}
-              style={{ background: '#12141d', width: '100%', maxWidth: '900px', borderRadius: '24px', overflow: 'hidden', display: 'flex', flexWrap: 'wrap', maxHeight: '90vh', border: '1px solid rgba(255,255,255,0.1)', position: 'relative' }}
+              style={{ background: '#12141d', width: '100%', maxWidth: '900px', borderRadius: '24px', overflowX: 'hidden', overflowY: 'auto', display: 'flex', flexWrap: 'wrap', maxHeight: '90vh', border: '1px solid rgba(255,255,255,0.1)', position: 'relative' }}
               onClick={(e) => e.stopPropagation()}
             >
               <button 
@@ -553,7 +553,7 @@ export default function StoreClient({ initialProducts, categories, session, acti
                 {selectedProduct.isNew && <span style={{ position: 'absolute', top: '24px', left: '24px', background: '#7c3aed', color: '#fff', fontSize: '12px', padding: '6px 12px', borderRadius: '8px', fontWeight: 'bold' }}><Sparkles size={14} style={{ display: 'inline', marginRight: '6px' }} />NUEVO</span>}
               </div>
               
-              <div style={{ flex: '1 1 400px', padding: '40px', overflowY: 'auto' }}>
+              <div style={{ flex: '1 1 400px', padding: '24px', overflowY: 'auto' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                   <span style={{ fontSize: '14px', color: '#7c3aed', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{selectedProduct.category?.name || "Sin Categoría"}</span>
                   <span style={{ display: 'flex', alignItems: 'center', fontSize: '14px', color: '#fbbf24', fontWeight: 'bold' }}><Star size={16} fill="#fbbf24" style={{ marginRight: '6px' }}/> {selectedProduct.rating} / 5</span>
