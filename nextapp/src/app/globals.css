@@ -1765,12 +1765,30 @@ body.show-specs .spec-label::before {
 
 @media (max-width: 480px) {
   .search-wrapper {
+    display: block;
+    width: 140px;
+  }
+  
+  .search-wrapper input {
+    padding-left: 32px;
+    font-size: 12px;
+  }
+  
+  .logo-text {
     display: none;
   }
 
   .cart-drawer {
     width: 100%;
     right: -100%;
+  }
+
+  .hero-title {
+    font-size: 28px;
+  }
+  
+  .hero-subtitle {
+    font-size: 14px;
   }
 }
 .product-image { width: 100%; height: 200px; object-fit: contain; margin-bottom: 16px; }
