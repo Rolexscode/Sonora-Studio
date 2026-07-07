@@ -581,13 +581,19 @@ export default function AdminClient({
     if (reportCategoryId || reportProductId) {
       try {
         const items = JSON.parse(p.items || "[]");
-        let hasItem = false;
+        let categoryMatch = !reportCategoryId;
+        let productMatch = !reportProductId;
+        
         for (const item of items) {
-          const prod = products.find(prod => prod.id === item.productId);
-          if (reportProductId && String(item.productId) === reportProductId) hasItem = true;
-          if (reportCategoryId && prod && String(prod.categoryId) === reportCategoryId) hasItem = true;
+          if (!categoryMatch && reportCategoryId) {
+            const prod = products.find(prod => prod.id === item.id);
+            if (prod && String(prod.categoryId) === reportCategoryId) categoryMatch = true;
+          }
+          if (!productMatch && reportProductId) {
+            if (String(item.id) === reportProductId) productMatch = true;
+          }
         }
-        if (!hasItem) match = false;
+        if (!(categoryMatch && productMatch)) match = false;
       } catch { match = false; }
     }
     return match;
