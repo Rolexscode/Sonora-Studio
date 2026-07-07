@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, User, ShoppingCart, Star, Package, Sparkles, LogOut, LayoutDashboard, Menu, X } from "lucide-react";
+import { Search, User, ShoppingCart, Star, Package, Sparkles, LogOut, LayoutDashboard, Menu, X, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { logout } from "@/app/auth-actions";
 import { createPurchase } from "@/app/actions";
