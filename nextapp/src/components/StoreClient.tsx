@@ -104,10 +104,10 @@ export default function StoreClient({ initialProducts, categories, session }: { 
             <span className="logo-text">Sonora Studio</span>
           </a>
 
-          <nav className="nav-desktop">
-            <ul className="nav-links" style={{ display: 'flex', gap: '24px', listStyle: 'none' }}>
+          <nav className="nav-desktop hide-scrollbar" style={{ flex: 1, margin: '0 24px', overflowX: 'auto' }}>
+            <ul className="nav-links" style={{ display: 'flex', gap: '18px', listStyle: 'none', margin: 0, padding: 0, whiteSpace: 'nowrap' }}>
               {['all', ...categories.map(c => c.name)].map((c) => (
-                <li key={c}>
+                <li key={c} style={{ flexShrink: 0 }}>
                   <button 
                     onClick={() => setCategory(c)} 
                     style={{ 
