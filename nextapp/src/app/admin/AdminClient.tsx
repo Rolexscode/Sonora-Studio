@@ -690,6 +690,7 @@ export default function AdminClient({
         @keyframes slideIn { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:translateY(0); } }
         @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
         * { box-sizing: border-box; }
+        body { overflow-x: auto !important; }
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
 
@@ -735,7 +736,7 @@ export default function AdminClient({
         }
       `}</style>
 
-      <div style={{ display: "flex", minHeight: "100vh", background: s.bg, color: s.text, fontFamily: "var(--font-jakarta, system-ui, sans-serif)", overflowX: "hidden", maxWidth: "100vw" }}>
+      <div style={{ display: "flex", minHeight: "100vh", background: s.bg, color: s.text, fontFamily: "var(--font-jakarta, system-ui, sans-serif)" }}>
 
         {/* Mobile overlay */}
         {sidebarOpen && (
