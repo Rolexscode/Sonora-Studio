@@ -855,36 +855,38 @@ export default function AdminClient({
                 </button>
               </div>
               <div style={{ background: s.card, borderRadius: "20px", border: `1px solid ${s.border}`, overflow: "hidden" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: "400px" }}>
-                  <thead style={{ background: "rgba(255,255,255,0.02)", borderBottom: `1px solid ${s.border}` }}>
-                    <tr>
-                      <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>ID</th>
-                      <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>Nombre</th>
-                      <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700, textAlign: "right" }}>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {categories.filter(c => c.name.toLowerCase().includes(searchCategoryQuery.toLowerCase())).map(c => (
-                      <tr key={c.id} style={{ borderBottom: `1px solid ${s.border}`, transition: "background 0.15s" }}
-                        onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.015)")}
-                        onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
-                        <td style={{ padding: "12px 18px", fontSize: "13px", color: s.muted }}>#{c.id}</td>
-                        <td style={{ padding: "12px 18px", fontSize: "14px", fontWeight: 600 }}>{c.name}</td>
-                        <td style={{ padding: "12px 18px", textAlign: "right" }}>
-                          <button onClick={() => setEditCategory(c)} style={{ background: "none", border: "none", color: s.sky, cursor: "pointer", marginRight: "12px" }}>
-                            <Edit2 size={16} />
-                          </button>
-                          <button onClick={() => handleDeleteCategory(c.id)} style={{ background: "none", border: "none", color: s.red, cursor: "pointer" }}>
-                            <Trash2 size={16} />
-                          </button>
-                        </td>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: "400px" }}>
+                    <thead style={{ background: "rgba(255,255,255,0.02)", borderBottom: `1px solid ${s.border}` }}>
+                      <tr>
+                        <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>ID</th>
+                        <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>Nombre</th>
+                        <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700, textAlign: "right" }}>Acciones</th>
                       </tr>
-                    ))}
-                    {categories.length === 0 && (
-                      <tr><td colSpan={3} style={{ padding: "40px", textAlign: "center", color: s.muted }}>No hay categorías registradas.</td></tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {categories.filter(c => c.name.toLowerCase().includes(searchCategoryQuery.toLowerCase())).map(c => (
+                        <tr key={c.id} style={{ borderBottom: `1px solid ${s.border}`, transition: "background 0.15s" }}
+                          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.015)")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+                          <td style={{ padding: "12px 18px", fontSize: "13px", color: s.muted }}>#{c.id}</td>
+                          <td style={{ padding: "12px 18px", fontSize: "14px", fontWeight: 600 }}>{c.name}</td>
+                          <td style={{ padding: "12px 18px", textAlign: "right" }}>
+                            <button onClick={() => setEditCategory(c)} style={{ background: "none", border: "none", color: s.sky, cursor: "pointer", marginRight: "12px" }}>
+                              <Edit2 size={16} />
+                            </button>
+                            <button onClick={() => handleDeleteCategory(c.id)} style={{ background: "none", border: "none", color: s.red, cursor: "pointer" }}>
+                              <Trash2 size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {categories.length === 0 && (
+                        <tr><td colSpan={3} style={{ padding: "40px", textAlign: "center", color: s.muted }}>No hay categorías registradas.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
@@ -899,63 +901,65 @@ export default function AdminClient({
                 </button>
               </div>
               <div style={{ background: s.card, borderRadius: "20px", border: `1px solid ${s.border}`, overflow: "hidden" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: "800px" }}>
-                  <thead style={{ background: "rgba(255,255,255,0.02)", borderBottom: `1px solid ${s.border}` }}>
-                    <tr>
-                      <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>Estado</th>
-                      <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>Título</th>
-                      <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>Descuento</th>
-                      <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>Fechas</th>
-                      <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>Aplica a</th>
-                      <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700, textAlign: "right" }}>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {promotions.map(p => {
-                      const now = new Date();
-                      const start = new Date(p.startDate);
-                      const end = new Date(p.endDate);
-                      const active = p.isActive && now >= start && now <= end;
-                      
-                      let appliesTo = "Toda la tienda";
-                      if (p.targetType === "CATEGORY") appliesTo = `Categoría: ${categories.find(c => c.id === p.targetId)?.name || p.targetId}`;
-                      if (p.targetType === "PRODUCT") appliesTo = `Producto: ${products.find(prod => prod.id === p.targetId)?.name || p.targetId}`;
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: "800px" }}>
+                    <thead style={{ background: "rgba(255,255,255,0.02)", borderBottom: `1px solid ${s.border}` }}>
+                      <tr>
+                        <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>Estado</th>
+                        <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>Título</th>
+                        <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>Descuento</th>
+                        <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>Fechas</th>
+                        <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>Aplica a</th>
+                        <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700, textAlign: "right" }}>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {promotions.map(p => {
+                        const now = new Date();
+                        const start = new Date(p.startDate);
+                        const end = new Date(p.endDate);
+                        const active = p.isActive && now >= start && now <= end;
+                        
+                        let appliesTo = "Toda la tienda";
+                        if (p.targetType === "CATEGORY") appliesTo = `Categoría: ${categories.find(c => c.id === p.targetId)?.name || p.targetId}`;
+                        if (p.targetType === "PRODUCT") appliesTo = `Producto: ${products.find(prod => prod.id === p.targetId)?.name || p.targetId}`;
 
-                      return (
-                        <tr key={p.id} style={{ borderBottom: `1px solid ${s.border}`, transition: "background 0.15s" }}
-                          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.015)")}
-                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
-                          <td style={{ padding: "12px 18px" }}>
-                            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "4px 8px", borderRadius: "20px", background: active ? s.greenMuted : s.redMuted, color: active ? s.green : s.red, fontSize: "11px", fontWeight: 700 }}>
-                              {active ? "Activo" : "Inactivo"}
-                            </div>
-                          </td>
-                          <td style={{ padding: "12px 18px", fontSize: "14px", fontWeight: 600 }}>{p.title}</td>
-                          <td style={{ padding: "12px 18px", fontSize: "14px", fontWeight: 700, color: s.purpleLight }}>{p.discount}%</td>
-                          <td style={{ padding: "12px 18px", fontSize: "12px", color: s.muted }}>
-                            {start.toLocaleDateString()} - {end.toLocaleDateString()}
-                          </td>
-                          <td style={{ padding: "12px 18px", fontSize: "13px" }}>{appliesTo}</td>
-                          <td style={{ padding: "12px 18px", textAlign: "right" }}>
-                            <button onClick={() => { setPromoTargetType(p.targetType); setEditPromotion(p); }} style={{ background: "none", border: "none", color: s.sky, cursor: "pointer", marginRight: "12px" }}>
-                              <Edit2 size={16} />
-                            </button>
-                            <button onClick={async () => {
-                              if (confirm("¿Eliminar promoción?")) {
-                                await deletePromotion(p.id); showToast("Promoción eliminada.");
-                              }
-                            }} style={{ background: "none", border: "none", color: s.red, cursor: "pointer" }}>
-                              <Trash2 size={16} />
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                    {promotions.length === 0 && (
-                      <tr><td colSpan={6} style={{ padding: "40px", textAlign: "center", color: s.muted }}>No hay promociones registradas.</td></tr>
-                    )}
-                  </tbody>
-                </table>
+                        return (
+                          <tr key={p.id} style={{ borderBottom: `1px solid ${s.border}`, transition: "background 0.15s" }}
+                            onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.015)")}
+                            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+                            <td style={{ padding: "12px 18px" }}>
+                              <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "4px 8px", borderRadius: "20px", background: active ? s.greenMuted : s.redMuted, color: active ? s.green : s.red, fontSize: "11px", fontWeight: 700 }}>
+                                {active ? "Activo" : "Inactivo"}
+                              </div>
+                            </td>
+                            <td style={{ padding: "12px 18px", fontSize: "14px", fontWeight: 600 }}>{p.title}</td>
+                            <td style={{ padding: "12px 18px", fontSize: "14px", fontWeight: 700, color: s.purpleLight }}>{p.discount}%</td>
+                            <td style={{ padding: "12px 18px", fontSize: "12px", color: s.muted }}>
+                              {start.toLocaleDateString()} - {end.toLocaleDateString()}
+                            </td>
+                            <td style={{ padding: "12px 18px", fontSize: "13px" }}>{appliesTo}</td>
+                            <td style={{ padding: "12px 18px", textAlign: "right" }}>
+                              <button onClick={() => { setPromoTargetType(p.targetType); setEditPromotion(p); }} style={{ background: "none", border: "none", color: s.sky, cursor: "pointer", marginRight: "12px" }}>
+                                <Edit2 size={16} />
+                              </button>
+                              <button onClick={async () => {
+                                if (confirm("¿Eliminar promoción?")) {
+                                  await deletePromotion(p.id); showToast("Promoción eliminada.");
+                                }
+                              }} style={{ background: "none", border: "none", color: s.red, cursor: "pointer" }}>
+                                <Trash2 size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {promotions.length === 0 && (
+                        <tr><td colSpan={6} style={{ padding: "40px", textAlign: "center", color: s.muted }}>No hay promociones registradas.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
