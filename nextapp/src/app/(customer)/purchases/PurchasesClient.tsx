@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Package, ShoppingBag, Search, X } from "lucide-react";
+import { Package, ShoppingBag, Search, X, Printer } from "lucide-react";
 import { Purchase } from "@prisma/client";
 
 interface PurchasesClientProps {
@@ -39,96 +39,90 @@ export default function PurchasesClient({ purchases }: PurchasesClientProps) {
 
   return (
     <main style={{ flex: 1, marginLeft: "260px", padding: "36px 40px", maxWidth: "calc(100vw - 260px)" }}>
-      <header style={{ marginBottom: "24px" }} className="no-print">
-        <h1 style={{ margin: "0 0 4px", fontSize: "26px", fontWeight: 800, letterSpacing: "-0.02em" }}>Historial de Compras</h1>
-        <p style={{ margin: "0 0 24px", fontSize: "14px", color: s.muted }}>Revisa el detalle de tus pedidos y boletas electrónicas.</p>
-        
-        {purchases.length > 0 && (
-          <div style={{ position: "relative", maxWidth: "400px" }}>
-            <Search size={18} color={s.muted} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)" }} />
-            <input
-              type="text"
-              placeholder="Buscar por orden o producto..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "12px 14px 12px 42px",
-                background: "rgba(255,255,255,0.03)",
-                border: `1px solid ${s.border}`,
-                borderRadius: "10px",
-                color: s.text,
-                fontSize: "14px",
-                outline: "none",
-              }}
-            />
+      <div className={selectedPurchase ? "hide-on-print" : ""}>
+        <header style={{ marginBottom: "36px" }} className="no-print">
+          <h1 style={{ margin: "0 0 4px", fontSize: "26px", fontWeight: 800, letterSpacing: "-0.02em" }}>Historial de Compras</h1>
+          <p style={{ margin: 0, fontSize: "14px", color: s.muted }}>Revisa el detalle de tus pedidos y boletas electrónicas.</p>
+        </header>
+
+        <div className="no-print" style={{ marginBottom: "24px", position: "relative" }}>
+          <Search size={18} color={s.muted} style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)" }} />
+          <input
+            type="text"
+            placeholder="Buscar por nombre de producto o número de orden (ej: #0001)..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ width: "100%", padding: "14px 16px 14px 44px", background: s.card, border: `1px solid ${s.border}`, borderRadius: "12px", color: "#fff", outline: "none", fontSize: "14px" }}
+          />
+        </div>
+
+        {purchases.length === 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 20px", background: s.card, borderRadius: "20px", border: `1px dashed ${s.border}`, textAlign: "center" }}>
+            <div style={{ width: "80px", height: "80px", borderRadius: "50%", background: s.purpleMuted, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "20px" }}>
+              <ShoppingBag size={36} color={s.purpleLight} />
+            </div>
+            <h2 style={{ fontSize: "22px", margin: "0 0 8px", fontWeight: 700 }}>Aún no tienes compras</h2>
+            <p style={{ color: s.muted, maxWidth: "380px", margin: "0 auto 28px", lineHeight: 1.6 }}>
+              Explora nuestro catálogo premium y equípate con los mejores instrumentos y equipos de estudio.
+            </p>
+            <Link href="/" style={{ padding: "14px 28px", background: s.purple, color: "#fff", textDecoration: "none", borderRadius: "12px", fontWeight: 700, fontSize: "15px" }}>
+              Ir al Catálogo
+            </Link>
+          </div>
+        ) : filteredPurchases.length === 0 ? (
+          <div style={{ padding: "40px", textAlign: "center", color: s.muted }}>No se encontraron compras que coincidan con tu búsqueda.</div>
+        ) : (
+          <div style={{ background: s.card, borderRadius: "12px", border: `1px solid ${s.border}`, overflow: "hidden" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead style={{ background: "rgba(0,0,0,0.2)", fontSize: "12px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em", textAlign: "left" }}>
+                <tr>
+                  <th style={{ padding: "16px 24px", fontWeight: 600 }}>Orden</th>
+                  <th style={{ padding: "16px 24px", fontWeight: 600 }}>Fecha</th>
+                  <th style={{ padding: "16px 24px", fontWeight: 600 }}>Artículos</th>
+                  <th style={{ padding: "16px 24px", fontWeight: 600 }}>Total</th>
+                  <th style={{ padding: "16px 24px", fontWeight: 600, textAlign: "right" }}>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPurchases.map((p) => {
+                  const items = (() => { try { return JSON.parse(p.items || "[]"); } catch { return []; } })();
+                  const date = new Date(p.createdAt);
+                  const itemsDesc = items.map((i: any) => `${i.quantity}x ${i.name}`).join(", ");
+                  
+                  return (
+                    <tr key={p.id} style={{ borderTop: `1px solid ${s.border}`, fontSize: "14px" }}>
+                      <td style={{ padding: "16px 24px", fontWeight: 700, color: s.purpleLight }}>#{p.id.toString().padStart(4, "0")}</td>
+                      <td style={{ padding: "16px 24px", color: s.muted }}>{date.toLocaleDateString()} <span style={{ fontSize: "12px" }}>{date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span></td>
+                      <td style={{ padding: "16px 24px", maxWidth: "250px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={itemsDesc}>{itemsDesc}</td>
+                      <td style={{ padding: "16px 24px", fontWeight: 700 }}>S/ {p.total.toFixed(2)}</td>
+                      <td style={{ padding: "16px 24px", textAlign: "right" }}>
+                        <button
+                          onClick={() => setSelectedPurchase(p)}
+                          style={{ padding: "8px 16px", background: "transparent", color: "#60a5fa", border: "1px solid rgba(96,165,250,0.2)", borderRadius: "6px", fontSize: "13px", fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}
+                          onMouseOver={(e) => e.currentTarget.style.background = "rgba(96,165,250,0.1)"}
+                          onMouseOut={(e) => e.currentTarget.style.background = "transparent"}
+                        >
+                          Ver boleta
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
-      </header>
-
-      {purchases.length === 0 ? (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 20px", background: s.card, borderRadius: "20px", border: `1px dashed ${s.border}`, textAlign: "center" }}>
-          <div style={{ width: "80px", height: "80px", borderRadius: "50%", background: s.purpleMuted, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "20px" }}>
-            <ShoppingBag size={36} color={s.purpleLight} />
-          </div>
-          <h2 style={{ fontSize: "22px", margin: "0 0 8px", fontWeight: 700 }}>Aún no tienes compras</h2>
-          <p style={{ color: s.muted, maxWidth: "380px", margin: "0 auto 28px", lineHeight: 1.6 }}>
-            Explora nuestro catálogo premium y equípate con los mejores instrumentos y equipos de estudio.
-          </p>
-          <Link href="/" style={{ padding: "14px 28px", background: s.purple, color: "#fff", textDecoration: "none", borderRadius: "12px", fontWeight: 700, fontSize: "15px" }}>
-            Ir al Catálogo
-          </Link>
-        </div>
-      ) : filteredPurchases.length === 0 ? (
-        <div style={{ padding: "40px", textAlign: "center", color: s.muted }}>No se encontraron compras que coincidan con tu búsqueda.</div>
-      ) : (
-        <div style={{ background: s.card, borderRadius: "12px", border: `1px solid ${s.border}`, overflow: "hidden" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead style={{ background: "rgba(0,0,0,0.2)", fontSize: "12px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em", textAlign: "left" }}>
-              <tr>
-                <th style={{ padding: "16px 24px", fontWeight: 600 }}>Orden</th>
-                <th style={{ padding: "16px 24px", fontWeight: 600 }}>Fecha</th>
-                <th style={{ padding: "16px 24px", fontWeight: 600 }}>Artículos</th>
-                <th style={{ padding: "16px 24px", fontWeight: 600 }}>Total</th>
-                <th style={{ padding: "16px 24px", fontWeight: 600, textAlign: "right" }}>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredPurchases.map((p) => {
-                const items = (() => { try { return JSON.parse(p.items || "[]"); } catch { return []; } })();
-                const date = new Date(p.createdAt);
-                const itemsDesc = items.map((i: any) => `${i.quantity}x ${i.name}`).join(", ");
-                
-                return (
-                  <tr key={p.id} style={{ borderTop: `1px solid ${s.border}`, fontSize: "14px" }}>
-                    <td style={{ padding: "16px 24px", fontWeight: 700, color: s.purpleLight }}>#{p.id.toString().padStart(4, "0")}</td>
-                    <td style={{ padding: "16px 24px", color: s.muted }}>{date.toLocaleDateString()} <span style={{ fontSize: "12px" }}>{date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span></td>
-                    <td style={{ padding: "16px 24px", maxWidth: "250px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={itemsDesc}>{itemsDesc}</td>
-                    <td style={{ padding: "16px 24px", fontWeight: 700 }}>S/ {p.total.toFixed(2)}</td>
-                    <td style={{ padding: "16px 24px", textAlign: "right" }}>
-                      <button
-                        onClick={() => setSelectedPurchase(p)}
-                        style={{ padding: "8px 16px", background: "transparent", color: "#60a5fa", border: "1px solid rgba(96,165,250,0.2)", borderRadius: "6px", fontSize: "13px", fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}
-                        onMouseOver={(e) => e.currentTarget.style.background = "rgba(96,165,250,0.1)"}
-                        onMouseOut={(e) => e.currentTarget.style.background = "transparent"}
-                      >
-                        Ver boleta
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+      </div>
 
       {/* Modal for Receipt */}
       {selectedPurchase && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }} onClick={() => setSelectedPurchase(null)}>
-          <div style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setSelectedPurchase(null)} style={{ position: "absolute", top: "-12px", right: "-36px", background: "none", border: "none", color: "#fff", cursor: "pointer" }}>
+        <div className="print-modal-overlay" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }} onClick={() => setSelectedPurchase(null)}>
+          <div className="print-modal-content" style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
+            <button className="no-print" onClick={() => setSelectedPurchase(null)} style={{ position: "absolute", top: "-12px", right: "-36px", background: "none", border: "none", color: "#fff", cursor: "pointer" }}>
               <X size={28} />
+            </button>
+            <button className="no-print" onClick={() => window.print()} style={{ position: "absolute", top: "-12px", right: "12px", background: "none", border: "none", color: "#6b7280", cursor: "pointer" }} title="Imprimir Boleta">
+              <Printer size={24} />
             </button>
             <ReceiptCard purchase={selectedPurchase} />
           </div>

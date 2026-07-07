@@ -36,9 +36,12 @@ export default async function CustomerLayout({ children }: { children: React.Rea
     <>
       <style>{`
         @media print {
-          aside, header, .no-print { display: none !important; }
-          main { margin: 0 !important; padding: 16px !important; }
-          .receipt-card { box-shadow: none !important; page-break-inside: avoid; }
+          body { background: white !important; }
+          aside, header, .no-print, .hide-on-print { display: none !important; }
+          main { margin: 0 !important; padding: 0 !important; background: white !important; }
+          .receipt-card { box-shadow: none !important; page-break-inside: avoid; margin: 0 auto !important; }
+          .print-modal-overlay { position: absolute !important; background: transparent !important; align-items: flex-start !important; padding: 0 !important; }
+          .print-modal-content { width: 100% !important; margin: 0 !important; }
         }
         * { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 6px; }
