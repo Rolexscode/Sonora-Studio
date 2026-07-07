@@ -55,7 +55,7 @@ export default async function CustomerLayout({ children }: { children: React.Rea
           <div style={{ padding: "24px 20px", borderBottom: `1px solid ${s.border}` }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/assets/images/logo.png" alt="Logo" style={{ width: "32px", height: "32px", borderRadius: "8px" }} />
+              <img src="/assets/images/logo_white.png" alt="Logo" style={{ height: "24px" }} />
               <div>
                 <p style={{ margin: 0, fontSize: "15px", fontWeight: 700 }}>Sonora Studio</p>
                 <p style={{ margin: 0, fontSize: "11px", color: s.muted }}>Portal del Cliente</p>

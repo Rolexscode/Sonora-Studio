@@ -68,7 +68,7 @@ export default function LoginPage() {
           {/* Logo + header */}
           <div style={{ textAlign: "center", marginBottom: "32px" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/images/logo.png" alt="Sonora Studio" style={{ width: "52px", height: "52px", borderRadius: "14px", marginBottom: "16px", objectFit: "cover" }} />
+            <img src="/assets/images/logo_white.png" alt="Sonora Studio" style={{ height: "48px", marginBottom: "16px" }} />
             <h1 style={{ fontSize: "26px", fontWeight: 800, margin: "0 0 6px", letterSpacing: "-0.02em" }}>Sonora Studio</h1>
             <p style={{ color: s.muted, fontSize: "14px", margin: 0 }}>
               {isRegistering ? "Crea una cuenta para empezar" : "Accede a tu cuenta para continuar"}

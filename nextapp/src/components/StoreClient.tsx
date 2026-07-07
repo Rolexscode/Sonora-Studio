@@ -186,7 +186,7 @@ export default function StoreClient({ initialProducts, categories, session, acti
       <header className="main-header" style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(11, 13, 20, 0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <div className="container header-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px' }}>
           <a href="#" className="logo" style={{ fontSize: '24px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <img src="/assets/images/logo.png" alt="Sonora Studio Logo" style={{ width: '32px', height: '32px', borderRadius: '8px' }} />
+            <img src="/assets/images/logo_white.png" alt="Sonora Studio Logo" style={{ height: '32px' }} />
             <span className="logo-text">Sonora Studio</span>
           </a>
 

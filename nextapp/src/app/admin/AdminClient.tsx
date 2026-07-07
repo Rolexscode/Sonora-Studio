@@ -574,7 +574,7 @@ export default function AdminClient({
       <div style={{ padding: "20px 16px", borderBottom: `1px solid ${s.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/images/logo.png" alt="Logo" style={{ width: "28px", height: "28px", borderRadius: "6px" }} />
+          <img src="/assets/images/logo_white.png" alt="Logo" style={{ height: "24px" }} />
           <div>
             <p style={{ margin: 0, fontSize: "14px", fontWeight: 700 }}>Sonora Admin</p>
             <p style={{ margin: 0, fontSize: "10px", color: s.muted }}>Panel de Control</p>
