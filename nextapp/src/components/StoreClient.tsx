@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, User, ShoppingCart, Star, Package, Sparkles, LogOut, LayoutDashboard } from "lucide-react";
+import { Search, User, ShoppingCart, Star, Package, Sparkles, LogOut, LayoutDashboard, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { logout } from "@/app/auth-actions";
 import { createPurchase } from "@/app/actions";
@@ -26,6 +26,7 @@ export default function StoreClient({ initialProducts, session }: { initialProdu
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCart, setShowCart] = useState(false);
   const [checkoutMsg, setCheckoutMsg] = useState("");
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const filteredProducts = initialProducts.filter(
     (p) => category === "all" || p.category === category
@@ -174,9 +175,47 @@ export default function StoreClient({ initialProducts, session }: { initialProdu
                 {cart.length > 0 && <span style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#7c3aed', color: '#fff', fontSize: '10px', width: '16px', height: '16px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{cart.length}</span>}
               </button>
             </div>
+            
+            <button className="icon-btn mobile-menu-btn" onClick={() => setShowMobileMenu(true)}>
+              <Menu size={20} />
+            </button>
           </div>
         </div>
       </header>
+
+      {/* Mobile Menu Drawer */}
+      <div 
+        className="mobile-drawer-overlay" 
+        style={{ display: showMobileMenu ? 'block' : 'none' }} 
+        onClick={() => setShowMobileMenu(false)}
+      ></div>
+      <div className={`mobile-drawer ${showMobileMenu ? 'active' : ''}`}>
+        <div className="drawer-header">
+          <span style={{ fontSize: '18px', fontWeight: 'bold' }}>Menú</span>
+          <button onClick={() => setShowMobileMenu(false)} style={{ background: 'none', border: 'none', color: '#a1a1aa', cursor: 'pointer', display: 'flex' }}>
+            <X size={24} />
+          </button>
+        </div>
+        <nav className="nav-mobile">
+          <ul>
+            {['all', 'guitarras', 'bajos', 'teclados', 'baterias', 'estudio'].map((c) => (
+              <li key={`mobile-${c}`}>
+                <button 
+                  onClick={() => { setCategory(c); setShowMobileMenu(false); }} 
+                  style={{ 
+                    background: 'none', border: 'none', padding: 0, textAlign: 'left',
+                    color: category === c ? '#fff' : '#a1a1aa', cursor: 'pointer',
+                    fontSize: '18px', fontWeight: category === c ? 700 : 500,
+                    textTransform: 'capitalize', width: '100%'
+                  }}
+                >
+                  {c === 'all' ? 'Inicio' : c}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
 
       {/* Cart Drawer */}
       <AnimatePresence>

@@ -424,7 +424,7 @@ export default function AdminClient({ session, products = [], purchases = [], us
   ];
 
   const Sidebar = () => (
-    <aside className="admin-sidebar" style={{
+    <aside className={`admin-sidebar${sidebarOpen ? " open" : ""}`} style={{
       width: "240px", background: s.surface, borderRight: `1px solid ${s.border}`,
       display: "flex", flexDirection: "column", position: "fixed", height: "100vh", top: 0, left: 0, zIndex: 200,
       transition: "transform 0.25s ease",
@@ -542,9 +542,8 @@ export default function AdminClient({ session, products = [], purchases = [], us
             style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 190, animation: "fadeIn 0.2s ease" }} />
         )}
 
-        <div className={`admin-sidebar${sidebarOpen ? " open" : ""}`}>
-          <Sidebar />
-        </div>
+        {/* Sidebar Component directly (it now handles its own 'open' class) */}
+        <Sidebar />
 
         <main className="admin-main" style={{ flex: 1, padding: "28px 32px", minHeight: "100vh" }}>
           {/* Toast */}
