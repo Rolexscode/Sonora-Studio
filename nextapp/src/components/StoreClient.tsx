@@ -145,16 +145,16 @@ export default function StoreClient({ initialProducts, categories, session, acti
   };
 
   return (
-    <div className="app-wrapper">
+    <div className="app-wrapper" style={{ paddingTop: 0 }}>
       {/* Top Announcement Bar */}
       {activePromotions.length > 0 ? (
-        <div className="announcement-bar" style={{ background: 'linear-gradient(90deg, #7c3aed, #db2777)', color: 'white', textAlign: 'center', padding: '10px 24px', fontWeight: 'bold', fontSize: '13px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', zIndex: 200, position: 'relative' }}>
+        <div className="announcement-bar" style={{ background: 'linear-gradient(90deg, #7c3aed, #db2777)', color: 'white', textAlign: 'center', padding: '10px 24px', fontWeight: 'bold', fontSize: '13px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', position: 'relative', top: 0, zIndex: 101, height: 'auto', minHeight: '38px' }}>
           <Sparkles size={16} />
           {activePromotions[0].title} - ¡Hasta {Math.max(...activePromotions.map(p => p.discount))}% de descuento!
           <Sparkles size={16} />
         </div>
       ) : (
-        <div className="announcement-bar">
+        <div className="announcement-bar" style={{ position: 'relative', top: 0, zIndex: 101, height: 'auto', minHeight: '38px' }}>
           <div className="container bar-content" style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 24px', fontSize: '12px' }}>
             <p>Envío gratuito en todos los instrumentos premium. Financiamiento de 12 meses sin intereses.</p>
             <div className="announcement-links" style={{ display: 'flex', gap: '16px' }}>

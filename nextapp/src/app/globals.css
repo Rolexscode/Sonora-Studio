@@ -1682,7 +1682,7 @@ body.show-specs .spec-label::before {
 
 @media (max-width: 1024px) {
   .app-wrapper {
-    padding-top: 80px;
+    padding-top: 0;
   }
 
   .catalog-grid {
@@ -1702,7 +1702,7 @@ body.show-specs .spec-label::before {
 
 @media (max-width: 768px) {
   .app-wrapper {
-    padding-top: 80px;
+    padding-top: 0;
   }
 
   .nav-desktop {
