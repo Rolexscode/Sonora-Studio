@@ -213,10 +213,10 @@ function ImageUploader({ value, onChange }: { value: string; onChange: (url: str
   return (
     <div style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", gap: "6px" }}>
       <label style={{ fontSize: "12px", fontWeight: 600, color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>Imagen del Producto</label>
-      <div style={{ display: "grid", gridTemplateColumns: value ? "1fr 180px" : "1fr", gap: "16px" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
         <div onClick={() => inputRef.current?.click()} onDragOver={e => { e.preventDefault(); setDragging(true); }}
           onDragLeave={() => setDragging(false)} onDrop={onDrop}
-          style={{ border: `2px dashed ${dragging ? s.purple : s.border}`, borderRadius: "12px", padding: "28px", textAlign: "center", cursor: "pointer", background: dragging ? s.purpleMuted : "rgba(0,0,0,0.15)", transition: "all 0.2s" }}>
+          style={{ flex: "1 1 200px", border: `2px dashed ${dragging ? s.purple : s.border}`, borderRadius: "12px", padding: "28px", textAlign: "center", cursor: "pointer", background: dragging ? s.purpleMuted : "rgba(0,0,0,0.15)", transition: "all 0.2s" }}>
           <input ref={inputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
           {uploading ? (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", color: s.muted }}>
@@ -232,7 +232,7 @@ function ImageUploader({ value, onChange }: { value: string; onChange: (url: str
           )}
         </div>
         {value && (
-          <div style={{ position: "relative", borderRadius: "10px", overflow: "hidden", border: `1px solid ${s.border}`, aspectRatio: "4/3" }}>
+          <div style={{ flex: "0 0 180px", position: "relative", borderRadius: "10px", overflow: "hidden", border: `1px solid ${s.border}`, aspectRatio: "4/3", width: "100%", maxWidth: "180px" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={value} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             <button type="button" onClick={() => onChange("")}
@@ -266,13 +266,13 @@ function SpecsEditor({ value, onChange }: { value: SpecsEntry[]; onChange: (v: S
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         {value.map((spec, i) => (
-          <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "8px", alignItems: "center" }}>
+          <div key={i} style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
             <input placeholder="Ej: Cuerdas" value={spec.key} onChange={e => onChange(value.map((sv, j) => j === i ? { ...sv, key: e.target.value } : sv))}
-              style={{ padding: "8px 12px", background: "rgba(0,0,0,0.2)", border: `1px solid ${s.border}`, borderRadius: "8px", color: s.text, fontSize: "13px", outline: "none" }} />
+              style={{ flex: "1 1 120px", padding: "8px 12px", background: "rgba(0,0,0,0.2)", border: `1px solid ${s.border}`, borderRadius: "8px", color: s.text, fontSize: "13px", outline: "none" }} />
             <input placeholder="Ej: 6" value={spec.value} onChange={e => onChange(value.map((sv, j) => j === i ? { ...sv, value: e.target.value } : sv))}
-              style={{ padding: "8px 12px", background: "rgba(0,0,0,0.2)", border: `1px solid ${s.border}`, borderRadius: "8px", color: s.text, fontSize: "13px", outline: "none" }} />
+              style={{ flex: "1 1 120px", padding: "8px 12px", background: "rgba(0,0,0,0.2)", border: `1px solid ${s.border}`, borderRadius: "8px", color: s.text, fontSize: "13px", outline: "none" }} />
             <button type="button" onClick={() => onChange(value.filter((_, j) => j !== i))}
-              style={{ background: s.redMuted, border: "none", color: s.red, borderRadius: "8px", width: "34px", height: "34px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+              style={{ background: s.redMuted, border: "none", color: s.red, borderRadius: "8px", width: "34px", height: "34px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
               <Minus size={14} />
             </button>
           </div>
