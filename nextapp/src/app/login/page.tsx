@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { login } from "@/app/auth-actions";
+import { login, register } from "@/app/auth-actions";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
+  const [isRegistering, setIsRegistering] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -30,8 +31,10 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     const formData = new FormData(e.currentTarget);
-    const res = await login(formData);
+    
+    const res = isRegistering ? await register(formData) : await login(formData);
     setLoading(false);
+    
     if (res?.error) {
       setError(res.error);
     } else {
@@ -50,7 +53,7 @@ export default function LoginPage() {
       <style>{`
         @keyframes fadeIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
         .google-btn:hover { background: rgba(255,255,255,0.08) !important; }
-        .admin-btn:hover { background: #6d28d9 !important; }
+        .submit-btn:hover { background: #6d28d9 !important; }
         .input-field:focus { border-color: #7c3aed !important; outline: none; }
       `}</style>
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: s.bg, color: s.text, fontFamily: "var(--font-jakarta, system-ui, sans-serif)", padding: "20px" }}>
@@ -67,7 +70,9 @@ export default function LoginPage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/assets/images/logo.png" alt="Sonora Studio" style={{ width: "52px", height: "52px", borderRadius: "14px", marginBottom: "16px", objectFit: "cover" }} />
             <h1 style={{ fontSize: "26px", fontWeight: 800, margin: "0 0 6px", letterSpacing: "-0.02em" }}>Sonora Studio</h1>
-            <p style={{ color: s.muted, fontSize: "14px", margin: 0 }}>Accede a tu cuenta para continuar</p>
+            <p style={{ color: s.muted, fontSize: "14px", margin: 0 }}>
+              {isRegistering ? "Crea una cuenta para empezar" : "Accede a tu cuenta para continuar"}
+            </p>
           </div>
 
           <div style={{ background: s.card, padding: "32px", borderRadius: "24px", border: `1px solid ${s.border}`, backdropFilter: "blur(12px)", boxShadow: "0 25px 50px rgba(0,0,0,0.4)" }}>
@@ -83,6 +88,7 @@ export default function LoginPage() {
               onClick={handleGoogleLogin}
               disabled={googleLoading}
               className="google-btn"
+              type="button"
               style={{
                 width: "100%", padding: "13px", display: "flex", alignItems: "center", justifyContent: "center", gap: "12px",
                 background: "rgba(255,255,255,0.05)", border: `1px solid ${s.border}`, borderRadius: "12px",
@@ -105,29 +111,51 @@ export default function LoginPage() {
             {/* Separator */}
             <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
               <div style={{ flex: 1, height: "1px", background: s.border }} />
-              <span style={{ fontSize: "12px", color: s.muted, whiteSpace: "nowrap" }}>o acceso de administrador</span>
+              <span style={{ fontSize: "12px", color: s.muted, whiteSpace: "nowrap" }}>o con correo electrónico</span>
               <div style={{ flex: 1, height: "1px", background: s.border }} />
             </div>
 
-            {/* Admin email/password form */}
+            {/* Email/password form */}
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              {isRegistering && (
+                <div>
+                  <label style={{ display: "block", marginBottom: "6px", color: s.muted, fontSize: "12px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Nombre completo</label>
+                  <input name="name" type="text" required className="input-field"
+                    style={{ width: "100%", padding: "11px 14px", background: s.inputBg, border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", boxSizing: "border-box", transition: "border 0.2s" }}
+                    placeholder="Tu nombre" />
+                </div>
+              )}
               <div>
                 <label style={{ display: "block", marginBottom: "6px", color: s.muted, fontSize: "12px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Email</label>
                 <input name="email" type="email" required className="input-field"
                   style={{ width: "100%", padding: "11px 14px", background: s.inputBg, border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", boxSizing: "border-box", transition: "border 0.2s" }}
-                  placeholder="Admin@sonora.com" />
+                  placeholder="Ingrese su correo" />
               </div>
               <div>
                 <label style={{ display: "block", marginBottom: "6px", color: s.muted, fontSize: "12px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Contraseña</label>
                 <input name="password" type="password" required className="input-field"
                   style={{ width: "100%", padding: "11px 14px", background: s.inputBg, border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", boxSizing: "border-box", transition: "border 0.2s" }}
-                  placeholder="••••••••" />
+                  placeholder="••••••••" minLength={6} />
               </div>
-              <button type="submit" disabled={loading} className="admin-btn"
+              <button type="submit" disabled={loading} className="submit-btn"
                 style={{ padding: "13px", background: s.purple, color: "#fff", border: "none", borderRadius: "12px", fontWeight: 700, fontSize: "15px", cursor: loading ? "not-allowed" : "pointer", marginTop: "4px", transition: "background 0.2s", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-                {loading ? <><div style={{ width: "16px", height: "16px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Entrando...</> : "Entrar como Admin"}
+                {loading ? (
+                  <><div style={{ width: "16px", height: "16px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Procesando...</>
+                ) : (
+                  isRegistering ? "Crear Cuenta" : "Iniciar Sesión"
+                )}
               </button>
             </form>
+            
+            <div style={{ textAlign: "center", marginTop: "20px" }}>
+              <button 
+                type="button" 
+                onClick={() => { setIsRegistering(!isRegistering); setError(""); }}
+                style={{ background: "none", border: "none", color: s.purple, cursor: "pointer", fontSize: "13px", fontWeight: 600 }}
+              >
+                {isRegistering ? "¿Ya tienes cuenta? Inicia sesión aquí" : "¿No tienes cuenta? Regístrate aquí"}
+              </button>
+            </div>
           </div>
 
           <div style={{ textAlign: "center", marginTop: "20px" }}>

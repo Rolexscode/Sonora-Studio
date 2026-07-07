@@ -27,6 +27,31 @@ export async function login(formData: FormData) {
   return { success: true, role: user.role };
 }
 
+export async function register(formData: FormData) {
+  const name = formData.get("name") as string;
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+
+  if (!name || !email || !password) return { error: "Todos los campos son obligatorios" };
+
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) return { error: "El correo ya está registrado" };
+
+  const user = await prisma.user.create({
+    data: { name, email, password, role: "CUSTOMER" }
+  });
+
+  const cookieStore = await cookies();
+  cookieStore.set("auth_session", JSON.stringify({ id: user.id, name: user.name, role: user.role, email: user.email }), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 60 * 60 * 24 * 7,
+    path: "/",
+  });
+
+  return { success: true, role: user.role };
+}
+
 export async function logout() {
   const cookieStore = await cookies();
   cookieStore.delete("auth_session");
