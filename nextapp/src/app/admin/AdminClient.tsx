@@ -376,8 +376,9 @@ function StatCard({ label, value, icon, color, muted, sparkData, trend }:
 }
 
 // ─── Main Component ──────────────────────────────────────────
-export default function AdminClient({ session, products = [], purchases = [], users = [] }:
-  { session: { name: string }; products?: Product[]; purchases?: Purchase[]; users?: UserWithStats[] }) {
+export default function AdminClient(
+  { session, products = [], purchases = [], users = [] }: 
+  { session: { id: number; name: string; email: string; role: string }; products?: Product[]; purchases?: Purchase[]; users?: UserWithStats[] }) {
   const [tab, setTab] = useState<Tab>("dashboard");
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [loading, setLoading] = useState(false);
