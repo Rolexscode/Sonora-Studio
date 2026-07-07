@@ -701,8 +701,8 @@ export default function AdminClient({ session, products = [], purchases = [], us
                         <td style={{ padding: "12px 18px", fontSize: "14px", fontWeight: 700 }}>S/ {p.price.toFixed(2)}</td>
                         <td style={{ padding: "12px 18px", fontSize: "13px" }}>{p.stock} un.</td>
                         <td style={{ padding: "12px 18px" }}>
-                          <span style={{ fontSize: "11px", padding: "3px 8px", background: p.inStock ? s.greenMuted : s.redMuted, color: p.inStock ? s.green : s.red, borderRadius: "6px", fontWeight: 600 }}>
-                            {p.inStock ? "En Stock" : "Agotado"}
+                          <span style={{ fontSize: "11px", padding: "3px 8px", background: (p.inStock && p.stock > 0) ? s.greenMuted : s.redMuted, color: (p.inStock && p.stock > 0) ? s.green : s.red, borderRadius: "6px", fontWeight: 600 }}>
+                            {(p.inStock && p.stock > 0) ? "En Stock" : "Agotado"}
                           </span>
                         </td>
                         <td style={{ padding: "12px 18px", textAlign: "right" }}>

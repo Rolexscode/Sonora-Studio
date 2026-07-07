@@ -62,6 +62,17 @@ export async function createPurchase(
   await prisma.purchase.create({
     data: { userId, total, items: JSON.stringify(items) },
   });
+
+  for (const item of items) {
+    const product = await prisma.product.findUnique({ where: { id: item.id } });
+    if (product) {
+      const newStock = Math.max(0, product.stock - item.quantity);
+      await prisma.product.update({
+        where: { id: item.id },
+        data: { stock: newStock, inStock: newStock > 0 && product.inStock },
+      });
+    }
+  }
   revalidatePath("/purchases");
   revalidatePath("/admin");
 }

@@ -14,6 +14,7 @@ interface Product {
   price: number;
   rating: number;
   inStock: boolean;
+  stock: number;
   isNew: boolean;
   desc: string;
   specs: string;
@@ -341,10 +342,10 @@ export default function StoreClient({ initialProducts, session }: { initialProdu
                     <span style={{ fontSize: '20px', fontWeight: 'bold' }}>S/ {p.price.toFixed(2)}</span>
                     <button 
                       onClick={(e) => { e.stopPropagation(); addToCart(p); }}
-                      style={{ padding: '8px 16px', background: p.inStock ? '#fff' : 'rgba(255,255,255,0.1)', color: p.inStock ? '#000' : '#a1a1aa', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: p.inStock ? 'pointer' : 'not-allowed' }}
-                      disabled={!p.inStock}
+                      style={{ padding: '8px 16px', background: (p.inStock && p.stock > 0) ? '#fff' : 'rgba(255,255,255,0.1)', color: (p.inStock && p.stock > 0) ? '#000' : '#a1a1aa', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: (p.inStock && p.stock > 0) ? 'pointer' : 'not-allowed' }}
+                      disabled={!(p.inStock && p.stock > 0)}
                     >
-                      {p.inStock ? 'Agregar' : 'Agotado'}
+                      {(p.inStock && p.stock > 0) ? 'Agregar' : 'Agotado'}
                     </button>
                   </div>
                 </div>
