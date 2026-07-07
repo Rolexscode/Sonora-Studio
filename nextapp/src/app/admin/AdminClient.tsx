@@ -421,7 +421,16 @@ export default function AdminClient(
     label: day.toLocaleDateString("es", { weekday: "short" }),
     value: purchases.filter(p => new Date(p.createdAt).toDateString() === day.toDateString()).reduce((sum, p) => sum + p.total, 0),
   }));
-  const categoryData = CATEGORIES.map(cat => ({ label: cat, value: products.filter(p => p.category === cat).length })).filter(d => d.value > 0);
+
+  const categoriesMap = new Map<string, number>();
+  products.forEach(p => {
+    const cat = p.category.toLowerCase();
+    categoriesMap.set(cat, (categoriesMap.get(cat) || 0) + 1);
+  });
+  const categoryData = Array.from(categoriesMap.entries())
+    .map(([label, value]) => ({ label, value }))
+    .sort((a, b) => b.value - a.value);
+
   const sparkRevenue = dailyRevenue.map(d => d.value);
 
   const showToast = (msg: string, ok = true) => { setToast({ msg, ok }); setTimeout(() => setToast(null), 3500); };
@@ -620,8 +629,8 @@ export default function AdminClient(
               <div className="stats-grid" style={{ display: "grid", gap: "16px" }}>
                 <StatCard label="Ingresos Totales" value={`S/ ${totalRevenue.toFixed(2)}`} icon={<TrendingUp size={18} />} color={s.green} muted={s.greenMuted} sparkData={sparkRevenue} trend="Últimos 7 días" />
                 <StatCard label="Ventas" value={String(purchases.length)} icon={<ShoppingBag size={18} />} color={s.purpleLight} muted={s.purpleMuted} trend="Total acumulado" />
-                <StatCard label="Productos" value={String(products.length)} icon={<Package size={18} />} color={s.sky} muted={s.skyMuted} trend={`${products.filter(p => p.inStock).length} en stock`} />
-                <StatCard label="Clientes" value={String(users.length)} icon={<Users size={18} />} color={s.amber} muted="rgba(251,191,36,0.12)" trend="Registrados" />
+                <StatCard label="Productos" value={String(products.length)} icon={<Package size={18} />} color={s.sky} muted={s.skyMuted} trend={`${products.filter(p => p.inStock && p.stock > 0).length} en stock`} />
+                <StatCard label="Clientes" value={String(users.filter(u => u.role === "CUSTOMER").length)} icon={<Users size={18} />} color={s.amber} muted="rgba(251,191,36,0.12)" trend="Registrados" />
               </div>
 
               <div className="charts-grid" style={{ display: "grid", gap: "20px" }}>
