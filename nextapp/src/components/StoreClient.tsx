@@ -54,7 +54,6 @@ export default function StoreClient({ initialProducts, categories, session }: { 
 
   const addToCart = (product: Product) => {
     setCart([...cart, product]);
-    setShowCart(true);
   };
 
   const removeFromCart = (productId: number) => {
