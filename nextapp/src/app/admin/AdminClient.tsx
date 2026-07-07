@@ -735,7 +735,7 @@ export default function AdminClient({
         }
       `}</style>
 
-      <div style={{ display: "flex", minHeight: "100vh", background: s.bg, color: s.text, fontFamily: "var(--font-jakarta, system-ui, sans-serif)" }}>
+      <div style={{ display: "flex", minHeight: "100vh", background: s.bg, color: s.text, fontFamily: "var(--font-jakarta, system-ui, sans-serif)", overflowX: "hidden", maxWidth: "100vw" }}>
 
         {/* Mobile overlay */}
         {sidebarOpen && (
@@ -1324,7 +1324,7 @@ export default function AdminClient({
         {/* ── PROMOTION MODAL ── */}
         {(showPromotionModal || editPromotion) && (
           <div onClick={e => { if (e.target === e.currentTarget) { setShowPromotionModal(false); setEditPromotion(null); } }}
-            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", animation: "fadeIn 0.2s ease" }}>
+            style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100dvh", background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px", boxSizing: "border-box", animation: "fadeIn 0.2s ease" }}>
             <div style={{ background: s.surface, border: `1px solid ${s.border}`, borderRadius: "24px", width: "100%", maxWidth: "500px", maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
               <div style={{ padding: "20px 24px", borderBottom: `1px solid ${s.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 800 }}>{editPromotion ? "Editar Promoción" : "Nueva Promoción"}</h2>
@@ -1409,7 +1409,7 @@ export default function AdminClient({
         {/* ── EDIT MODAL ── */}
         {editProduct && (
           <div onClick={e => { if (e.target === e.currentTarget) setEditProduct(null); }}
-            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", animation: "fadeIn 0.2s ease" }}>
+            style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100dvh", background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px", boxSizing: "border-box", animation: "fadeIn 0.2s ease" }}>
             <div style={{ background: s.surface, border: `1px solid ${s.border}`, borderRadius: "24px", width: "100%", maxWidth: "min(100%, 820px)", maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column", boxSizing: "border-box" }}>
               <div style={{ padding: "20px 24px", borderBottom: `1px solid ${s.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
@@ -1430,7 +1430,7 @@ export default function AdminClient({
         {/* ── ADD MODAL ── */}
         {showAddModal && (
           <div onClick={e => { if (e.target === e.currentTarget) setShowAddModal(false); }}
-            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", animation: "fadeIn 0.2s ease" }}>
+            style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100dvh", background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px", boxSizing: "border-box", animation: "fadeIn 0.2s ease" }}>
             <div style={{ background: s.surface, border: `1px solid ${s.border}`, borderRadius: "24px", width: "100%", maxWidth: "min(100%, 820px)", maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column", boxSizing: "border-box" }}>
               <div style={{ padding: "20px 24px", borderBottom: `1px solid ${s.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
@@ -1450,7 +1450,7 @@ export default function AdminClient({
         {/* ── CATEGORY MODAL ── */}
         {(showCategoryModal || editCategory) && (
           <div onClick={e => { if (e.target === e.currentTarget) { setShowCategoryModal(false); setEditCategory(null); } }}
-            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", animation: "fadeIn 0.2s ease" }}>
+            style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100dvh", background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px", boxSizing: "border-box", animation: "fadeIn 0.2s ease" }}>
             <div style={{ background: s.surface, border: `1px solid ${s.border}`, borderRadius: "24px", width: "100%", maxWidth: "400px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
               <div style={{ padding: "20px 24px", borderBottom: `1px solid ${s.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 800 }}>{editCategory ? "Editar Categoría" : "Nueva Categoría"}</h2>
@@ -1478,7 +1478,7 @@ export default function AdminClient({
         {/* ── RECEIPT MODAL ── */}
         {receiptSale && (
           <div onClick={e => { if (e.target === e.currentTarget) setReceiptSale(null); }}
-            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", animation: "fadeIn 0.2s ease" }}>
+            style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100dvh", background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px", boxSizing: "border-box", animation: "fadeIn 0.2s ease" }}>
             <div style={{ background: "#fff", color: "#000", borderRadius: "12px", width: "100%", maxWidth: "400px", padding: "32px", position: "relative", boxShadow: "0 20px 40px rgba(0,0,0,0.5)" }}>
               <button onClick={() => setReceiptSale(null)} style={{ position: "absolute", top: "16px", right: "16px", background: "rgba(0,0,0,0.05)", border: "none", borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#000" }} className="no-print">
                 <X size={16} />
