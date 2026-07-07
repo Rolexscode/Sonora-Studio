@@ -16,7 +16,7 @@ export default async function AdminPage() {
 
   const [products, purchases, users] = await Promise.all([
     prisma.product.findMany(),
-    prisma.purchase.findMany({ orderBy: { createdAt: "desc" } }),
+    prisma.purchase.findMany({ include: { user: true }, orderBy: { createdAt: "desc" } }),
     prisma.user.findMany({
       where: { role: "CUSTOMER" },
       include: { purchases: { select: { total: true } } },

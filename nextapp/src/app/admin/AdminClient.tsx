@@ -18,6 +18,7 @@ interface Product {
 }
 interface Purchase {
   id: number; userId: number; total: number; createdAt: Date; items: string;
+  user?: { name: string; email: string };
 }
 interface UserWithStats {
   id: number; name: string; email: string; role: string;
@@ -384,6 +385,7 @@ export default function AdminClient({ session, products = [], purchases = [], us
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [receiptSale, setReceiptSale] = useState<Purchase | null>(null);
 
   const displayProducts = products
     .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.category.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -741,14 +743,14 @@ export default function AdminClient({ session, products = [], purchases = [], us
                   <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: "540px" }}>
                     <thead style={{ background: "rgba(255,255,255,0.02)", borderBottom: `1px solid ${s.border}` }}>
                       <tr>
-                        {["Orden", "Fecha", "Artículos", "Total"].map((h, i) => (
-                          <th key={h} style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700, textAlign: i === 3 ? "right" : "left" }}>{h}</th>
+                        {["Orden / Cliente", "Fecha", "Artículos", "Total", "Acciones"].map((h, i) => (
+                          <th key={h} style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700, textAlign: i === 3 ? "right" : i === 4 ? "center" : "left" }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {purchases.length === 0 ? (
-                        <tr><td colSpan={4} style={{ padding: "40px", textAlign: "center", color: s.muted }}>No hay ventas registradas.</td></tr>
+                        <tr><td colSpan={5} style={{ padding: "40px", textAlign: "center", color: s.muted }}>No hay ventas registradas.</td></tr>
                       ) : purchases.map((sale, i) => {
                         const items = (() => { try { return JSON.parse(sale.items || "[]"); } catch { return []; } })();
                         const date = new Date(sale.createdAt);
@@ -758,6 +760,12 @@ export default function AdminClient({ session, products = [], purchases = [], us
                             onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
                             <td style={{ padding: "14px 18px" }}>
                               <span style={{ fontSize: "13px", fontWeight: 700, color: s.purpleLight }}>#{sale.id.toString().padStart(4, "0")}</span>
+                              {sale.user && (
+                                <div style={{ marginTop: "4px", fontSize: "11px", color: s.text }}>
+                                  <strong>{sale.user.name}</strong><br/>
+                                  <span style={{ color: s.muted }}>{sale.user.email}</span>
+                                </div>
+                              )}
                             </td>
                             <td style={{ padding: "14px 18px", fontSize: "12px", color: s.muted }}>
                               {date.toLocaleDateString()}<br />
@@ -893,6 +901,73 @@ export default function AdminClient({ session, products = [], purchases = [], us
               </div>
               <div style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
                 <ProductForm key="add" initialData={emptyForm()} onSubmit={handleAdd} submitLabel="Crear Producto" loading={loading} />
+              </div>
+            </div>
+          </div>
+        )}
+        {/* ── RECEIPT MODAL ── */}
+        {receiptSale && (
+          <div onClick={e => { if (e.target === e.currentTarget) setReceiptSale(null); }}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", animation: "fadeIn 0.2s ease" }}>
+            <div style={{ background: "#fff", color: "#000", borderRadius: "12px", width: "100%", maxWidth: "400px", padding: "32px", position: "relative", boxShadow: "0 20px 40px rgba(0,0,0,0.5)" }}>
+              <button onClick={() => setReceiptSale(null)} style={{ position: "absolute", top: "16px", right: "16px", background: "rgba(0,0,0,0.05)", border: "none", borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#000" }} className="no-print">
+                <X size={16} />
+              </button>
+              
+              <div style={{ textAlign: "center", marginBottom: "24px" }}>
+                <h2 style={{ margin: "0 0 8px", fontSize: "20px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px" }}>Sonora Studio</h2>
+                <p style={{ margin: 0, fontSize: "12px", color: "#666" }}>Boleta de Venta Electrónica</p>
+                <p style={{ margin: "4px 0 0", fontSize: "14px", fontWeight: 700 }}>N° {receiptSale.id.toString().padStart(6, "0")}</p>
+              </div>
+
+              <div style={{ borderTop: "1px dashed #ccc", borderBottom: "1px dashed #ccc", padding: "12px 0", marginBottom: "20px", fontSize: "12px" }}>
+                <p style={{ margin: "0 0 4px" }}><strong>Fecha:</strong> {new Date(receiptSale.createdAt).toLocaleString("es-PE")}</p>
+                {receiptSale.user && (
+                  <>
+                    <p style={{ margin: "0 0 4px" }}><strong>Cliente:</strong> {receiptSale.user.name}</p>
+                    <p style={{ margin: 0 }}><strong>Email:</strong> {receiptSale.user.email}</p>
+                  </>
+                )}
+              </div>
+
+              <div style={{ marginBottom: "20px" }}>
+                <table style={{ width: "100%", fontSize: "12px", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid #eee" }}>
+                      <th style={{ textAlign: "left", paddingBottom: "8px" }}>Cant.</th>
+                      <th style={{ textAlign: "left", paddingBottom: "8px" }}>Descripción</th>
+                      <th style={{ textAlign: "right", paddingBottom: "8px" }}>Importe</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      const items = JSON.parse(receiptSale.items || "[]");
+                      return items.map((item: any, i: number) => (
+                        <tr key={i}>
+                          <td style={{ padding: "8px 0", verticalAlign: "top" }}>{item.quantity}</td>
+                          <td style={{ padding: "8px 10px", verticalAlign: "top" }}>{item.name}</td>
+                          <td style={{ padding: "8px 0", textAlign: "right", verticalAlign: "top" }}>S/ {(item.price * item.quantity).toFixed(2)}</td>
+                        </tr>
+                      ));
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+
+              <div style={{ borderTop: "2px solid #000", paddingTop: "16px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "16px", fontWeight: 800 }}>
+                <span>TOTAL A PAGAR</span>
+                <span>S/ {receiptSale.total.toFixed(2)}</span>
+              </div>
+
+              <div style={{ marginTop: "32px", textAlign: "center", fontSize: "11px", color: "#666" }}>
+                <p style={{ margin: "0 0 4px" }}>¡Gracias por su compra en Sonora Studio!</p>
+                <p style={{ margin: 0 }}>Conserve esta boleta para cualquier reclamo.</p>
+              </div>
+
+              <div style={{ marginTop: "24px", textAlign: "center" }} className="no-print">
+                <button onClick={() => window.print()} style={{ background: "#000", color: "#fff", border: "none", padding: "10px 20px", borderRadius: "8px", fontWeight: 700, cursor: "pointer", fontSize: "13px" }}>
+                  Imprimir Boleta
+                </button>
               </div>
             </div>
           </div>
