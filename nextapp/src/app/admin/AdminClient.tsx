@@ -1410,7 +1410,7 @@ export default function AdminClient({
         {editProduct && (
           <div onClick={e => { if (e.target === e.currentTarget) setEditProduct(null); }}
             style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", animation: "fadeIn 0.2s ease" }}>
-            <div style={{ background: s.surface, border: `1px solid ${s.border}`, borderRadius: "24px", width: "100%", maxWidth: "820px", maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+            <div style={{ background: s.surface, border: `1px solid ${s.border}`, borderRadius: "24px", width: "100%", maxWidth: "min(100%, 820px)", maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column", boxSizing: "border-box" }}>
               <div style={{ padding: "20px 24px", borderBottom: `1px solid ${s.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
                   <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 800 }}>Editar Producto</h2>
@@ -1431,7 +1431,7 @@ export default function AdminClient({
         {showAddModal && (
           <div onClick={e => { if (e.target === e.currentTarget) setShowAddModal(false); }}
             style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", animation: "fadeIn 0.2s ease" }}>
-            <div style={{ background: s.surface, border: `1px solid ${s.border}`, borderRadius: "24px", width: "100%", maxWidth: "820px", maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+            <div style={{ background: s.surface, border: `1px solid ${s.border}`, borderRadius: "24px", width: "100%", maxWidth: "min(100%, 820px)", maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column", boxSizing: "border-box" }}>
               <div style={{ padding: "20px 24px", borderBottom: `1px solid ${s.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
                   <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 800 }}>Nuevo Producto</h2>
