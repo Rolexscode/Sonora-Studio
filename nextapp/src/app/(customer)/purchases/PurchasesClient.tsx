@@ -72,7 +72,7 @@ export default function PurchasesClient({ purchases }: PurchasesClientProps) {
         ) : filteredPurchases.length === 0 ? (
           <div style={{ padding: "40px", textAlign: "center", color: s.muted }}>No se encontraron compras que coincidan con tu búsqueda.</div>
         ) : (
-          <div style={{ background: s.card, borderRadius: "12px", border: `1px solid ${s.border}`, overflow: "hidden" }}>
+          <div style={{ background: s.card, borderRadius: "12px", border: `1px solid ${s.border}`, overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead style={{ background: "rgba(0,0,0,0.2)", fontSize: "12px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em", textAlign: "left" }}>
                 <tr>
