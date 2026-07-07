@@ -219,7 +219,7 @@ export default async function PurchasesPage() {
                       )}
                     </div>
 
-                    <div style={{ padding: "0 24px 28px", textAlign: "center" }}>
+                      <div style={{ padding: "0 24px 28px", textAlign: "center", marginTop: "20px" }}>
                         {/* Simple barcode visual */}
                         <div style={{ display: "flex", justifyContent: "center", gap: "2px", marginBottom: "8px" }}>
                           {Array.from({ length: 28 }).map((_, i) => (
@@ -231,7 +231,6 @@ export default async function PurchasesPage() {
                         </p>
                         <p style={{ margin: "10px 0 0", fontSize: "11px", color: "#9ca3af", fontStyle: "italic" }}>¡Gracias por su compra!</p>
                       </div>
-                    </div>
 
                     {/* Torn bottom edge */}
                     <div style={{ position: "absolute", bottom: "-10px", left: 0, right: 0, height: "12px", backgroundImage: "radial-gradient(circle at 50% 0%, #080a12 70%, transparent 70%)", backgroundSize: "20px 12px", backgroundRepeat: "repeat-x", backgroundPosition: "0 0" }} />
