@@ -1410,8 +1410,8 @@ export default function AdminClient({
         {editProduct && (
           <div onClick={e => { if (e.target === e.currentTarget) setEditProduct(null); }}
             style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100dvh", background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px", boxSizing: "border-box", animation: "fadeIn 0.2s ease" }}>
-            <div style={{ background: s.surface, border: `1px solid ${s.border}`, borderRadius: "24px", width: "100%", maxWidth: "min(100%, 820px)", maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column", boxSizing: "border-box" }}>
-              <div style={{ padding: "20px 24px", borderBottom: `1px solid ${s.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ background: s.surface, border: `1px solid ${s.border}`, borderRadius: "24px", width: "100%", maxWidth: "min(100%, 820px)", height: "min(85dvh, 90vh)", display: "flex", flexDirection: "column", boxSizing: "border-box" }}>
+              <div style={{ padding: "16px 20px", borderBottom: `1px solid ${s.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
                 <div>
                   <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 800 }}>Editar Producto</h2>
                   <p style={{ margin: 0, fontSize: "12px", color: s.muted }}>{editProduct.name}</p>
@@ -1420,7 +1420,7 @@ export default function AdminClient({
                   <X size={16} />
                 </button>
               </div>
-              <div style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
+              <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "20px", WebkitOverflowScrolling: "touch" }}>
                 <ProductForm key={editProduct.id} initialData={productToForm(editProduct)} categories={categories} onSubmit={handleUpdate} submitLabel="Guardar Cambios" loading={loading} />
               </div>
             </div>
@@ -1431,8 +1431,8 @@ export default function AdminClient({
         {showAddModal && (
           <div onClick={e => { if (e.target === e.currentTarget) setShowAddModal(false); }}
             style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100dvh", background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px", boxSizing: "border-box", animation: "fadeIn 0.2s ease" }}>
-            <div style={{ background: s.surface, border: `1px solid ${s.border}`, borderRadius: "24px", width: "100%", maxWidth: "min(100%, 820px)", maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column", boxSizing: "border-box" }}>
-              <div style={{ padding: "20px 24px", borderBottom: `1px solid ${s.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ background: s.surface, border: `1px solid ${s.border}`, borderRadius: "24px", width: "100%", maxWidth: "min(100%, 820px)", height: "min(85dvh, 90vh)", display: "flex", flexDirection: "column", boxSizing: "border-box" }}>
+              <div style={{ padding: "16px 20px", borderBottom: `1px solid ${s.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
                 <div>
                   <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 800 }}>Nuevo Producto</h2>
                   <p style={{ margin: 0, fontSize: "12px", color: s.muted }}>Completa todos los campos para tu inventario</p>
@@ -1441,7 +1441,7 @@ export default function AdminClient({
                   <X size={16} />
                 </button>
               </div>
-              <div style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
+              <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "20px", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
                 <ProductForm key="add" initialData={emptyForm()} categories={categories} onSubmit={handleAdd} submitLabel="Crear Producto" loading={loading} />
               </div>
             </div>
