@@ -118,7 +118,7 @@ function DonutChart({ data }: { data: { label: string; value: number }[] }) {
     return seg;
   });
   return (
-    <svg viewBox="0 0 200 120" style={{ width: "100%", height: "auto", display: "block" }}>
+    <svg viewBox="0 0 260 120" style={{ width: "100%", height: "auto", display: "block" }}>
       {segments.map((seg, i) => (
         <circle key={i} cx={cx} cy={cy} r={R}
           fill="none" stroke={seg.color} strokeWidth={stroke}
@@ -132,9 +132,9 @@ function DonutChart({ data }: { data: { label: string; value: number }[] }) {
       <text x={cx} y={cy + 12} textAnchor="middle" fill="#6b7280" fontSize={8}>productos</text>
       {/* Legend */}
       {segments.map((seg, i) => (
-        <g key={i} transform={`translate(135, ${10 + i * 20})`}>
+        <g key={i} transform={`translate(140, ${10 + i * 20})`}>
           <rect width={10} height={10} rx={2} fill={seg.color} />
-          <text x={14} y={9} fill="#9ca3af" fontSize={9}>{seg.label} ({seg.value})</text>
+          <text x={14} y={9} fill="#9ca3af" fontSize={8}>{seg.label} ({seg.value})</text>
         </g>
       ))}
     </svg>
