@@ -57,10 +57,11 @@ export async function deleteProduct(id: number) {
 export async function createPurchase(
   userId: number,
   items: { id: number; name: string; price: number; quantity: number }[],
-  total: number
+  total: number,
+  paymentDetails?: string
 ) {
   await prisma.purchase.create({
-    data: { userId, total, items: JSON.stringify(items) },
+    data: { userId, total, items: JSON.stringify(items), paymentDetails },
   });
 
   for (const item of items) {

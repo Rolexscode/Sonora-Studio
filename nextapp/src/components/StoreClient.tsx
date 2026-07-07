@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, User, ShoppingCart, Star, Package, Sparkles, LogOut, LayoutDashboard, Menu, X, ShoppingBag } from "lucide-react";
+import { Search, User, ShoppingCart, Star, Package, Sparkles, LogOut, LayoutDashboard, Menu, X, ShoppingBag, Plus, Minus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { logout } from "@/app/auth-actions";
 import { createPurchase } from "@/app/actions";
@@ -31,6 +31,8 @@ export default function StoreClient({ initialProducts, categories, session }: { 
   const [checkoutMsg, setCheckoutMsg] = useState("");
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [checkoutStep, setCheckoutStep] = useState<"cart" | "payment">("cart");
+  const [paymentMethods, setPaymentMethods] = useState<{method: string, amount: number}[]>([{ method: "Efectivo", amount: 0 }]);
 
   const filteredProducts = initialProducts.filter(
     (p) => {
@@ -70,11 +72,34 @@ export default function StoreClient({ initialProducts, categories, session }: { 
       setCheckoutMsg("Inicia sesión para comprar");
       return;
     }
-    const total = cart.reduce((sum, item) => sum + item.price, 0);
-    await createPurchase(session.id, cart.map(p => ({ id: p.id, name: p.name, price: p.price, quantity: 1 })), total);
-    setCart([]);
-    setCheckoutMsg("¡Compra realizada!");
-    setTimeout(() => setCheckoutMsg(""), 3000);
+    
+    const cartTotal = cart.reduce((s, i) => s + i.price, 0);
+    const paidTotal = paymentMethods.reduce((s, p) => s + p.amount, 0);
+    
+    if (Math.abs(cartTotal - paidTotal) > 0.01) {
+      setCheckoutMsg("El total pagado debe ser exactamente igual al monto de la compra.");
+      return;
+    }
+
+    setCheckoutMsg("Procesando pago...");
+    try {
+      await createPurchase(
+        session.id,
+        groupedCart.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })),
+        cartTotal,
+        JSON.stringify(paymentMethods.filter(p => p.amount > 0))
+      );
+      setCart([]);
+      setCheckoutMsg("¡Compra realizada con éxito!");
+      setCheckoutStep("cart");
+      setPaymentMethods([{ method: "Efectivo", amount: 0 }]);
+      setTimeout(() => {
+        setCheckoutMsg("");
+        setShowCart(false);
+      }, 2000);
+    } catch (e) {
+      setCheckoutMsg("Error al procesar. Intenta nuevamente.");
+    }
   };
 
   const container = {
@@ -245,47 +270,119 @@ export default function StoreClient({ initialProducts, categories, session }: { 
               style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '400px', maxWidth: '100vw', background: '#12141d', borderLeft: '1px solid rgba(255,255,255,0.1)', zIndex: 1000, display: 'flex', flexDirection: 'column', boxShadow: '-20px 0 50px rgba(0,0,0,0.5)' }}
             >
               <div style={{ padding: '24px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2 style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}><ShoppingCart size={24} /> Tu Carrito</h2>
-                <button onClick={() => setShowCart(false)} style={{ background: 'none', border: 'none', color: '#a1a1aa', cursor: 'pointer', fontSize: '24px', lineHeight: 1 }}>&times;</button>
+                <h2 style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {checkoutStep === "payment" && <button onClick={() => setCheckoutStep("cart")} style={{ background: 'none', border: 'none', color: '#a1a1aa', cursor: 'pointer', display: 'flex', padding: 0 }}><X size={20} style={{ transform: 'rotate(45deg)' }}/></button>}
+                  {checkoutStep === "cart" ? <><ShoppingCart size={24} /> Tu Carrito</> : 'Pago'}
+                </h2>
+                <button onClick={() => { setShowCart(false); setCheckoutStep("cart"); }} style={{ background: 'none', border: 'none', color: '#a1a1aa', cursor: 'pointer', fontSize: '24px', lineHeight: 1 }}>&times;</button>
               </div>
 
               <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {groupedCart.length === 0 ? (
-                  <div style={{ textAlign: 'center', color: '#a1a1aa', marginTop: '40px' }}>
-                    <ShoppingCart size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
-                    <p>Tu carrito está vacío</p>
-                    <button onClick={() => setShowCart(false)} style={{ marginTop: '16px', background: 'rgba(255,255,255,0.05)', border: 'none', padding: '8px 16px', color: '#fff', borderRadius: '8px', cursor: 'pointer' }}>Seguir comprando</button>
-                  </div>
-                ) : (
-                  groupedCart.map((item, i) => (
-                    <div key={i} style={{ display: 'flex', gap: '16px', background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <img src={item.image} alt={item.name} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', background: 'rgba(255,255,255,0.1)' }} />
-                      <div style={{ flex: 1 }}>
-                        <h4 style={{ margin: '0 0 4px', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' }}>{item.name}</h4>
-                        <div style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>S/ {item.price.toFixed(2)} c/u</div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: '12px', background: 'rgba(124, 58, 237, 0.2)', color: '#a78bfa', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold' }}>{item.quantity}x</span>
-                          <button onClick={() => removeFromCart(item.id)} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>Quitar 1</button>
+                {checkoutStep === "cart" ? (
+                  groupedCart.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: '#a1a1aa', marginTop: '40px' }}>
+                      <ShoppingCart size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
+                      <p>Tu carrito está vacío</p>
+                      <button onClick={() => setShowCart(false)} style={{ marginTop: '16px', background: 'rgba(255,255,255,0.05)', border: 'none', padding: '8px 16px', color: '#fff', borderRadius: '8px', cursor: 'pointer' }}>Seguir comprando</button>
+                    </div>
+                  ) : (
+                    groupedCart.map((item, i) => (
+                      <div key={i} style={{ display: 'flex', gap: '16px', background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <img src={item.image} alt={item.name} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', background: 'rgba(255,255,255,0.1)' }} />
+                        <div style={{ flex: 1 }}>
+                          <h4 style={{ margin: '0 0 4px', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' }}>{item.name}</h4>
+                          <div style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>S/ {item.price.toFixed(2)} c/u</div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', padding: '2px' }}>
+                              <button onClick={() => removeFromCart(item.id)} style={{ background: 'none', border: 'none', color: '#a1a1aa', cursor: 'pointer', display: 'flex', padding: '4px' }}><Minus size={14} /></button>
+                              <span style={{ fontSize: '12px', fontWeight: 'bold', minWidth: '16px', textAlign: 'center' }}>{item.quantity}</span>
+                              <button onClick={() => { const p = initialProducts.find(x => x.id === item.id); if(p) addToCart(p); }} style={{ background: 'none', border: 'none', color: '#a1a1aa', cursor: 'pointer', display: 'flex', padding: '4px' }}><Plus size={14} /></button>
+                            </div>
+                            <button onClick={() => { const newCart = cart.filter(x => x.id !== item.id); setCart(newCart); }} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', display: 'flex', padding: '4px' }}><Trash2 size={16} /></button>
+                          </div>
                         </div>
                       </div>
+                    ))
+                  )
+                ) : (
+                  <div>
+                    <h3 style={{ fontSize: '16px', marginBottom: '16px' }}>Métodos de Pago</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+                      {paymentMethods.map((pm, idx) => (
+                        <div key={idx} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <select 
+                            value={pm.method}
+                            onChange={(e) => { const newPm = [...paymentMethods]; newPm[idx].method = e.target.value; setPaymentMethods(newPm); }}
+                            style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                          >
+                            <option value="Efectivo" style={{ background: '#12141d' }}>Efectivo</option>
+                            <option value="Yape" style={{ background: '#12141d' }}>Yape</option>
+                            <option value="Plin" style={{ background: '#12141d' }}>Plin</option>
+                            <option value="Tarjeta" style={{ background: '#12141d' }}>Tarjeta</option>
+                            <option value="Transferencia" style={{ background: '#12141d' }}>Transferencia</option>
+                          </select>
+                          <span style={{ color: '#a1a1aa' }}>S/</span>
+                          <input 
+                            type="number" 
+                            value={pm.amount || ''}
+                            onChange={(e) => { const newPm = [...paymentMethods]; newPm[idx].amount = parseFloat(e.target.value) || 0; setPaymentMethods(newPm); }}
+                            placeholder="0.00"
+                            style={{ width: '100px', padding: '10px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                          />
+                          {paymentMethods.length > 1 && (
+                            <button onClick={() => { const newPm = paymentMethods.filter((_, i) => i !== idx); setPaymentMethods(newPm); }} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '4px' }}><X size={16} /></button>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  ))
+                    <button 
+                      onClick={() => setPaymentMethods([...paymentMethods, { method: "Yape", amount: 0 }])}
+                      style={{ background: 'none', border: '1px dashed rgba(255,255,255,0.2)', color: '#a1a1aa', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', width: '100%', fontSize: '14px', transition: 'background 0.2s' }}
+                    >
+                      + Añadir método de pago
+                    </button>
+                    
+                    <div style={{ marginTop: '32px', padding: '16px', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}>
+                        <span style={{ color: '#a1a1aa' }}>Total Compra:</span>
+                        <span>S/ {cart.reduce((s, i) => s + i.price, 0).toFixed(2)}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}>
+                        <span style={{ color: '#a1a1aa' }}>Total Pagado:</span>
+                        <span style={{ color: paymentMethods.reduce((s, p) => s + p.amount, 0) >= cart.reduce((s, i) => s + i.price, 0) ? '#34d399' : '#fbbf24' }}>S/ {paymentMethods.reduce((s, p) => s + p.amount, 0).toFixed(2)}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '8px', marginTop: '8px' }}>
+                        <span style={{ color: '#a1a1aa' }}>Falta pagar:</span>
+                        <span style={{ color: '#f87171' }}>S/ {Math.max(0, cart.reduce((s, i) => s + i.price, 0) - paymentMethods.reduce((s, p) => s + p.amount, 0)).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
 
               {groupedCart.length > 0 && (
                 <div style={{ padding: '24px', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', color: '#a1a1aa', fontSize: '14px' }}>
-                    <span>Subtotal</span>
-                    <span>S/ {cart.reduce((s, i) => s + i.price, 0).toFixed(2)}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', fontSize: '18px', fontWeight: 'bold' }}>
-                    <span>Total a Pagar</span>
-                    <span style={{ color: '#34d399' }}>S/ {cart.reduce((s, i) => s + i.price, 0).toFixed(2)}</span>
-                  </div>
+                  {checkoutStep === "cart" && (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', color: '#a1a1aa', fontSize: '14px' }}>
+                        <span>Subtotal</span>
+                        <span>S/ {cart.reduce((s, i) => s + i.price, 0).toFixed(2)}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', fontSize: '18px', fontWeight: 'bold' }}>
+                        <span>Total a Pagar</span>
+                        <span style={{ color: '#34d399' }}>S/ {cart.reduce((s, i) => s + i.price, 0).toFixed(2)}</span>
+                      </div>
+                    </>
+                  )}
                   {checkoutMsg && <div style={{ color: checkoutMsg.includes('!') ? '#34d399' : '#f87171', fontSize: '14px', marginBottom: '16px', textAlign: 'center', background: checkoutMsg.includes('!') ? 'rgba(52, 211, 153, 0.1)' : 'rgba(248, 113, 113, 0.1)', padding: '8px', borderRadius: '8px' }}>{checkoutMsg}</div>}
-                  <button onClick={handleCheckout} style={{ width: '100%', padding: '16px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px', transition: 'background 0.2s' }}>
-                    Procesar Pago Seguro
+                  <button 
+                    onClick={checkoutStep === "cart" ? () => {
+                      setCheckoutStep("payment"); 
+                      setPaymentMethods([{ method: "Efectivo", amount: cart.reduce((s, i) => s + i.price, 0) }]);
+                    } : handleCheckout} 
+                    style={{ width: '100%', padding: '16px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px', transition: 'background 0.2s' }}
+                  >
+                    {checkoutStep === "cart" ? 'Proceder al Pago' : 'Confirmar y Pagar'}
                   </button>
                 </div>
               )}

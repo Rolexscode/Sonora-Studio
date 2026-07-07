@@ -45,4 +45,5 @@ model Purchase {
   total     Float
   createdAt DateTime @default(now())
   items     String   // JSON string of {productId, name, price, quantity}
+  paymentDetails String? // JSON string of [{method, amount}]
 }

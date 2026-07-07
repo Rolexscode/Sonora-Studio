@@ -199,7 +199,27 @@ export default async function PurchasesPage() {
                         <span>S/ {p.total.toFixed(2)}</span>
                       </div>
 
-                      <div style={{ marginTop: "20px", textAlign: "center" }}>
+                      {p.paymentDetails && (
+                        <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px dashed #d1d5db" }}>
+                          <p style={{ margin: "0 0 8px", fontSize: "11px", fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.07em" }}>Métodos de Pago</p>
+                          {(() => {
+                            try {
+                              const methods = JSON.parse(p.paymentDetails);
+                              return methods.map((m: any, idx: number) => (
+                                <div key={idx} style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "#374151", marginBottom: "4px" }}>
+                                  <span>{m.method}</span>
+                                  <span>S/ {m.amount.toFixed(2)}</span>
+                                </div>
+                              ));
+                            } catch {
+                              return null;
+                            }
+                          })()}
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ padding: "0 24px 28px", textAlign: "center" }}>
                         {/* Simple barcode visual */}
                         <div style={{ display: "flex", justifyContent: "center", gap: "2px", marginBottom: "8px" }}>
                           {Array.from({ length: 28 }).map((_, i) => (
