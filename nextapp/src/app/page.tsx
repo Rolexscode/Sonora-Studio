@@ -6,9 +6,19 @@ const prisma = new PrismaClient();
 
 export default async function Page() {
   const session = await getSession();
-  const [products, categories] = await Promise.all([
+  const now = new Date();
+  
+  const [products, categories, activePromotions] = await Promise.all([
     prisma.product.findMany({ include: { category: true } }),
-    prisma.category.findMany({ orderBy: { name: "asc" } })
+    prisma.category.findMany({ orderBy: { name: "asc" } }),
+    prisma.promotion.findMany({
+      where: {
+        isActive: true,
+        startDate: { lte: now },
+        endDate: { gte: now }
+      }
+    })
   ]);
-  return <StoreClient initialProducts={products} categories={categories} session={session} />;
+  
+  return <StoreClient initialProducts={products} categories={categories} session={session} activePromotions={activePromotions} />;
 }

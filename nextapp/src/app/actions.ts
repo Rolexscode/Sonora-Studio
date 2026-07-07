@@ -103,3 +103,21 @@ export async function deleteCategory(id: number) {
   revalidatePath("/admin");
   revalidatePath("/");
 }
+
+export async function createPromotion(data: { title: string; discount: number; startDate: Date; endDate: Date; isActive: boolean; targetType: string; targetId?: number }) {
+  await prisma.promotion.create({ data });
+  revalidatePath("/admin");
+  revalidatePath("/");
+}
+
+export async function updatePromotion(id: number, data: { title: string; discount: number; startDate: Date; endDate: Date; isActive: boolean; targetType: string; targetId?: number }) {
+  await prisma.promotion.update({ where: { id }, data });
+  revalidatePath("/admin");
+  revalidatePath("/");
+}
+
+export async function deletePromotion(id: number) {
+  await prisma.promotion.delete({ where: { id } });
+  revalidatePath("/admin");
+  revalidatePath("/");
+}

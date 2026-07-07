@@ -14,7 +14,7 @@ export default async function AdminPage() {
     redirect("/login");
   }
 
-  const [products, purchases, users, categories] = await Promise.all([
+  const [products, purchases, users, categories, promotions] = await Promise.all([
     prisma.product.findMany({ include: { category: true } }),
     prisma.purchase.findMany({ include: { user: true }, orderBy: { createdAt: "desc" } }),
     prisma.user.findMany({
@@ -22,6 +22,7 @@ export default async function AdminPage() {
       orderBy: { id: "desc" },
     }),
     prisma.category.findMany({ orderBy: { name: "asc" } }),
+    prisma.promotion.findMany({ orderBy: { id: "desc" } }),
   ]);
 
   return (
@@ -31,6 +32,7 @@ export default async function AdminPage() {
       purchases={purchases}
       users={users}
       categories={categories}
+      promotions={promotions}
     />
   );
 }

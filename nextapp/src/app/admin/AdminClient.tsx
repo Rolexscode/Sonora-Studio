@@ -1,6 +1,6 @@
 "use client";
 
-import { addProduct, updateProduct, deleteProduct, updateUserRole, addCategory, updateCategory, deleteCategory } from "@/app/actions";
+import { addProduct, updateProduct, deleteProduct, updateUserRole, addCategory, updateCategory, deleteCategory, createPromotion, updatePromotion, deletePromotion } from "@/app/actions";
 import { logout } from "@/app/auth-actions";
 import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
@@ -8,7 +8,7 @@ import {
   LogOut, Package, PlusCircle, ShoppingBag, Trash2,
   LayoutDashboard, Edit2, X, Upload, CheckCircle,
   AlertCircle, Plus, Minus, TrendingUp, Users, Eye,
-  Download, FileText, Menu, ChevronLeft, Mail,
+  Download, FileText, Menu, ChevronLeft, Mail, Percent,
 } from "lucide-react";
 import { uploadProductImage } from "@/lib/supabase";
 
@@ -24,8 +24,11 @@ interface UserWithStats {
   id: number; name: string; email: string; role: string;
   purchases: { total: number }[];
 }
+interface Promotion {
+  id: number; title: string; discount: number; startDate: Date; endDate: Date; isActive: boolean; targetType: string; targetId: number | null;
+}
 
-type Tab = "dashboard" | "products" | "categories" | "sales" | "customers" | "admins";
+type Tab = "dashboard" | "products" | "categories" | "promotions" | "sales" | "customers" | "admins";
 
 const s = {
   bg: "#080a12", surface: "#0f1120", card: "#141728",
@@ -381,9 +384,21 @@ function StatCard({ label, value, icon, color, muted, sparkData, trend }:
 }
 
 // ─── Main Component ──────────────────────────────────────────
-export default function AdminClient(
-  { session, products = [], purchases = [], users = [], categories = [] }: 
-  { session: { id: number; name: string; email: string; role: string }; products?: Product[]; purchases?: Purchase[]; users?: UserWithStats[]; categories?: {id: number, name: string}[] }) {
+export default function AdminClient({
+  session,
+  products = [],
+  purchases = [],
+  users = [],
+  categories = [],
+  promotions = [],
+}: {
+  session: { id: number; name: string; email: string; role: string };
+  products?: Product[];
+  purchases?: Purchase[];
+  users?: UserWithStats[];
+  categories?: { id: number; name: string }[];
+  promotions?: Promotion[];
+}) {
   const [tab, setTab] = useState<Tab>("dashboard");
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -396,6 +411,8 @@ export default function AdminClient(
   const [searchCustomersQuery, setSearchCustomersQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showPromotionModal, setShowPromotionModal] = useState(false);
+  const [editPromotion, setEditPromotion] = useState<Promotion | null>(null);
   const [receiptSale, setReceiptSale] = useState<Purchase | null>(null);
 
   const displayProducts = products
@@ -466,6 +483,42 @@ export default function AdminClient(
     catch { showToast("Error al crear categoría.", false); }
     finally { setLoading(false); }
   };
+  const handleAddPromotion = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const data = {
+      title: fd.get("title") as string,
+      discount: parseFloat(fd.get("discount") as string),
+      startDate: new Date(fd.get("startDate") as string),
+      endDate: new Date(fd.get("endDate") as string),
+      isActive: fd.get("isActive") === "on",
+      targetType: fd.get("targetType") as string,
+      targetId: fd.get("targetId") ? parseInt(fd.get("targetId") as string) : undefined,
+    };
+    if (!data.title || isNaN(data.discount)) return;
+    setLoading(true);
+    try { await createPromotion(data); showToast("Promoción agregada."); setShowPromotionModal(false); }
+    catch { showToast("Error al agregar promoción.", false); }
+    finally { setLoading(false); }
+  };
+  const handleUpdatePromotion = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editPromotion) return;
+    const fd = new FormData(e.currentTarget);
+    const data = {
+      title: fd.get("title") as string,
+      discount: parseFloat(fd.get("discount") as string),
+      startDate: new Date(fd.get("startDate") as string),
+      endDate: new Date(fd.get("endDate") as string),
+      isActive: fd.get("isActive") === "on",
+      targetType: fd.get("targetType") as string,
+      targetId: fd.get("targetId") ? parseInt(fd.get("targetId") as string) : undefined,
+    };
+    setLoading(true);
+    try { await updatePromotion(editPromotion.id, data); showToast("Promoción actualizada."); setEditPromotion(null); setShowPromotionModal(false); }
+    catch { showToast("Error al actualizar promoción.", false); }
+    finally { setLoading(false); }
+  };
   const handleUpdateCategory = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!editCategory) return;
@@ -502,6 +555,7 @@ export default function AdminClient(
 
   const navItems: { id: Tab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
+    { id: "promotions", label: "Promociones", icon: <Percent size={18} />, badge: promotions.length },
     { id: "categories", label: "Categorías", icon: <Package size={18} />, badge: categories.length },
     { id: "products", label: "Productos", icon: <Package size={18} />, badge: products.length },
     { id: "sales", label: "Ventas", icon: <ShoppingBag size={18} />, badge: purchases.length },
@@ -774,6 +828,77 @@ export default function AdminClient(
             </div>
           )}
 
+          {/* ── PROMOTIONS TABLE ── */}
+          {tab === "promotions" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }} className="no-print">
+                <h2 style={{ margin: 0, fontSize: "18px", fontWeight: 800 }}>Promociones</h2>
+                <button onClick={() => setShowPromotionModal(true)} style={{ padding: "10px 18px", background: s.purple, color: "#fff", border: "none", borderRadius: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                  <Plus size={16} /> Nueva Promo
+                </button>
+              </div>
+              <div style={{ background: s.card, borderRadius: "20px", border: `1px solid ${s.border}`, overflow: "hidden" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: "800px" }}>
+                  <thead style={{ background: "rgba(255,255,255,0.02)", borderBottom: `1px solid ${s.border}` }}>
+                    <tr>
+                      <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>Estado</th>
+                      <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>Título</th>
+                      <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>Descuento</th>
+                      <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>Fechas</th>
+                      <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>Aplica a</th>
+                      <th style={{ padding: "12px 18px", fontSize: "11px", color: s.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700, textAlign: "right" }}>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {promotions.map(p => {
+                      const now = new Date();
+                      const start = new Date(p.startDate);
+                      const end = new Date(p.endDate);
+                      const active = p.isActive && now >= start && now <= end;
+                      
+                      let appliesTo = "Toda la tienda";
+                      if (p.targetType === "CATEGORY") appliesTo = `Categoría ID: ${p.targetId}`;
+                      if (p.targetType === "PRODUCT") appliesTo = `Producto ID: ${p.targetId}`;
+
+                      return (
+                        <tr key={p.id} style={{ borderBottom: `1px solid ${s.border}`, transition: "background 0.15s" }}
+                          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.015)")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+                          <td style={{ padding: "12px 18px" }}>
+                            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "4px 8px", borderRadius: "20px", background: active ? s.greenMuted : s.redMuted, color: active ? s.green : s.red, fontSize: "11px", fontWeight: 700 }}>
+                              {active ? "Activo" : "Inactivo"}
+                            </div>
+                          </td>
+                          <td style={{ padding: "12px 18px", fontSize: "14px", fontWeight: 600 }}>{p.title}</td>
+                          <td style={{ padding: "12px 18px", fontSize: "14px", fontWeight: 700, color: s.purpleLight }}>{p.discount}%</td>
+                          <td style={{ padding: "12px 18px", fontSize: "12px", color: s.muted }}>
+                            {start.toLocaleDateString()} - {end.toLocaleDateString()}
+                          </td>
+                          <td style={{ padding: "12px 18px", fontSize: "13px" }}>{appliesTo}</td>
+                          <td style={{ padding: "12px 18px", textAlign: "right" }}>
+                            <button onClick={() => setEditPromotion(p)} style={{ background: "none", border: "none", color: s.sky, cursor: "pointer", marginRight: "12px" }}>
+                              <Edit2 size={16} />
+                            </button>
+                            <button onClick={async () => {
+                              if (confirm("¿Eliminar promoción?")) {
+                                await deletePromotion(p.id); showToast("Promoción eliminada.");
+                              }
+                            }} style={{ background: "none", border: "none", color: s.red, cursor: "pointer" }}>
+                              <Trash2 size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {promotions.length === 0 && (
+                      <tr><td colSpan={6} style={{ padding: "40px", textAlign: "center", color: s.muted }}>No hay promociones registradas.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {/* ── PRODUCTS TABLE ── */}
           {tab === "products" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -1031,6 +1156,74 @@ export default function AdminClient(
             </div>
           )}
         </main>
+        {/* ── PROMOTION MODAL ── */}
+        {(showPromotionModal || editPromotion) && (
+          <div onClick={e => { if (e.target === e.currentTarget) { setShowPromotionModal(false); setEditPromotion(null); } }}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", animation: "fadeIn 0.2s ease" }}>
+            <div style={{ background: s.surface, border: `1px solid ${s.border}`, borderRadius: "24px", width: "100%", maxWidth: "500px", maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+              <div style={{ padding: "20px 24px", borderBottom: `1px solid ${s.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 800 }}>{editPromotion ? "Editar Promoción" : "Nueva Promoción"}</h2>
+                <button onClick={() => { setShowPromotionModal(false); setEditPromotion(null); }} style={{ background: "rgba(255,255,255,0.06)", border: "none", borderRadius: "8px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: s.text }}>
+                  <X size={16} />
+                </button>
+              </div>
+              <div style={{ padding: "24px", overflowY: "auto" }}>
+                <form onSubmit={editPromotion ? handleUpdatePromotion : handleAddPromotion} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>Título de la Promoción <span style={{ color: s.purple }}>*</span></label>
+                    <input name="title" required defaultValue={editPromotion?.title || ""} placeholder="Ej: Cyber Deals 30%"
+                      style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none" }} />
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>Descuento (%) <span style={{ color: s.purple }}>*</span></label>
+                    <input name="discount" type="number" min="0" max="100" step="0.1" required defaultValue={editPromotion?.discount || ""} placeholder="Ej: 30"
+                      style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none" }} />
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <label style={{ fontSize: "12px", fontWeight: 600, color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>Fecha de Inicio <span style={{ color: s.purple }}>*</span></label>
+                      <input name="startDate" type="datetime-local" required defaultValue={editPromotion ? new Date(editPromotion.startDate).toISOString().slice(0, 16) : ""}
+                        style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none", colorScheme: "dark" }} />
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <label style={{ fontSize: "12px", fontWeight: 600, color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>Fecha de Fin <span style={{ color: s.purple }}>*</span></label>
+                      <input name="endDate" type="datetime-local" required defaultValue={editPromotion ? new Date(editPromotion.endDate).toISOString().slice(0, 16) : ""}
+                        style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none", colorScheme: "dark" }} />
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>Tipo de Aplicación <span style={{ color: s.purple }}>*</span></label>
+                    <select name="targetType" required defaultValue={editPromotion?.targetType || "ALL"}
+                      onChange={e => {
+                        const targetIdContainer = document.getElementById('targetIdContainer');
+                        if (targetIdContainer) {
+                          targetIdContainer.style.display = e.target.value === 'ALL' ? 'none' : 'flex';
+                        }
+                      }}
+                      style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none" }}>
+                      <option value="ALL">Toda la tienda</option>
+                      <option value="CATEGORY">Categoría Específica</option>
+                      <option value="PRODUCT">Producto Específico</option>
+                    </select>
+                  </div>
+                  <div id="targetIdContainer" style={{ display: editPromotion?.targetType === 'ALL' || !editPromotion ? 'none' : 'flex', flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: s.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>ID Objetivo (Categoría o Producto) <span style={{ color: s.purple }}>*</span></label>
+                    <input name="targetId" type="number" defaultValue={editPromotion?.targetId || ""} placeholder="Ej: 1"
+                      style={{ padding: "10px 14px", background: "rgba(0,0,0,0.25)", border: `1px solid ${s.border}`, color: s.text, borderRadius: "10px", fontSize: "14px", outline: "none" }} />
+                  </div>
+                  <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", marginTop: "8px" }}>
+                    <input type="checkbox" name="isActive" defaultChecked={editPromotion ? editPromotion.isActive : true} style={{ width: "16px", height: "16px", accentColor: s.purple }} />
+                    <span style={{ fontSize: "14px" }}>Promoción Activa</span>
+                  </label>
+                  <button type="submit" disabled={loading}
+                    style={{ padding: "12px", background: loading ? "rgba(124,58,237,0.5)" : s.purple, color: "#fff", border: "none", borderRadius: "10px", fontWeight: 700, fontSize: "14px", cursor: loading ? "not-allowed" : "pointer", marginTop: "8px" }}>
+                    {loading ? "Guardando..." : "Guardar Promoción"}
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── EDIT MODAL ── */}
         {editProduct && (

@@ -21,8 +21,18 @@ interface Product {
   specs: string;
   image: string;
 }
+interface Promotion {
+  id: number;
+  title: string;
+  discount: number;
+  startDate: Date;
+  endDate: Date;
+  isActive: boolean;
+  targetType: string;
+  targetId: number | null;
+}
 
-export default function StoreClient({ initialProducts, categories, session }: { initialProducts: Product[], categories: { id: number; name: string }[], session: { id: number, name: string, email: string, role: string } | null }) {
+export default function StoreClient({ initialProducts, categories, session, activePromotions = [] }: { initialProducts: Product[], categories: { id: number; name: string }[], session: { id: number, name: string, email: string, role: string } | null, activePromotions?: Promotion[] }) {
   const [category, setCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [cart, setCart] = useState<Product[]>([]);
@@ -43,6 +53,25 @@ export default function StoreClient({ initialProducts, categories, session }: { 
       return matchCategory && matchSearch;
     }
   );
+
+  const getDiscountedPrice = (product: Product) => {
+    const prodPromo = activePromotions.find(p => p.targetType === 'PRODUCT' && p.targetId === product.id);
+    if (prodPromo) return product.price * (1 - prodPromo.discount / 100);
+
+    const catPromo = activePromotions.find(p => p.targetType === 'CATEGORY' && p.targetId === product.categoryId);
+    if (catPromo) return product.price * (1 - catPromo.discount / 100);
+
+    const allPromo = activePromotions.find(p => p.targetType === 'ALL');
+    if (allPromo) return product.price * (1 - allPromo.discount / 100);
+
+    return product.price;
+  };
+
+  const mappedProducts = filteredProducts.map(p => ({
+    ...p,
+    discountedPrice: getDiscountedPrice(p),
+    originalPrice: p.price
+  }));
 
   const groupedCart = cart.reduce((acc, item) => {
     const found = acc.find(x => x.id === item.id);
@@ -73,7 +102,7 @@ export default function StoreClient({ initialProducts, categories, session }: { 
       return;
     }
     
-    const cartTotal = cart.reduce((s, i) => s + i.price, 0);
+    const cartTotal = cart.reduce((s, i) => s + getDiscountedPrice(i), 0);
     const paidTotal = paymentMethods.reduce((s, p) => s + p.amount, 0);
     
     if (Math.abs(cartTotal - paidTotal) > 0.01) {
@@ -85,7 +114,7 @@ export default function StoreClient({ initialProducts, categories, session }: { 
     try {
       await createPurchase(
         session.id,
-        groupedCart.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })),
+        groupedCart.map(i => ({ id: i.id, name: i.name, price: getDiscountedPrice(i), quantity: i.quantity })),
         cartTotal,
         JSON.stringify(paymentMethods.filter(p => p.amount > 0))
       );
@@ -118,15 +147,23 @@ export default function StoreClient({ initialProducts, categories, session }: { 
   return (
     <div className="app-wrapper">
       {/* Top Announcement Bar */}
-      <div className="announcement-bar">
-        <div className="container bar-content" style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 24px', fontSize: '12px' }}>
-          <p>Envío gratuito en todos los instrumentos premium. Financiamiento de 12 meses sin intereses.</p>
-          <div className="announcement-links" style={{ display: 'flex', gap: '16px' }}>
-            <a href="#">Soporte</a>
-            <a href="#">Tiendas</a>
+      {activePromotions.length > 0 ? (
+        <div className="announcement-bar" style={{ background: 'linear-gradient(90deg, #7c3aed, #db2777)', color: 'white', textAlign: 'center', padding: '10px 24px', fontWeight: 'bold', fontSize: '13px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', zIndex: 200, position: 'relative' }}>
+          <Sparkles size={16} />
+          {activePromotions[0].title} - ¡Hasta {Math.max(...activePromotions.map(p => p.discount))}% de descuento!
+          <Sparkles size={16} />
+        </div>
+      ) : (
+        <div className="announcement-bar">
+          <div className="container bar-content" style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 24px', fontSize: '12px' }}>
+            <p>Envío gratuito en todos los instrumentos premium. Financiamiento de 12 meses sin intereses.</p>
+            <div className="announcement-links" style={{ display: 'flex', gap: '16px' }}>
+              <a href="#">Soporte</a>
+              <a href="#">Tiendas</a>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main Navigation Header */}
       <header className="main-header" style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(11, 13, 20, 0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -291,7 +328,7 @@ export default function StoreClient({ initialProducts, categories, session }: { 
                         <img src={item.image} alt={item.name} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', background: 'rgba(255,255,255,0.1)' }} />
                         <div style={{ flex: 1 }}>
                           <h4 style={{ margin: '0 0 4px', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' }}>{item.name}</h4>
-                          <div style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>S/ {item.price.toFixed(2)} c/u</div>
+                          <div style={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '8px' }}>S/ {getDiscountedPrice(item).toFixed(2)} c/u</div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.3)', borderRadius: '12px', padding: '2px' }}>
                               <button onClick={() => removeFromCart(item.id)} style={{ background: 'none', border: 'none', color: '#a1a1aa', cursor: 'pointer', display: 'flex', padding: '4px' }}><Minus size={14} /></button>
@@ -345,15 +382,15 @@ export default function StoreClient({ initialProducts, categories, session }: { 
                     <div style={{ marginTop: '32px', padding: '16px', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}>
                         <span style={{ color: '#a1a1aa' }}>Total Compra:</span>
-                        <span>S/ {cart.reduce((s, i) => s + i.price, 0).toFixed(2)}</span>
+                        <span>S/ {cart.reduce((s, i) => s + getDiscountedPrice(i), 0).toFixed(2)}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}>
                         <span style={{ color: '#a1a1aa' }}>Total Pagado:</span>
-                        <span style={{ color: paymentMethods.reduce((s, p) => s + p.amount, 0) >= cart.reduce((s, i) => s + i.price, 0) ? '#34d399' : '#fbbf24' }}>S/ {paymentMethods.reduce((s, p) => s + p.amount, 0).toFixed(2)}</span>
+                        <span style={{ color: paymentMethods.reduce((s, p) => s + p.amount, 0) >= cart.reduce((s, i) => s + getDiscountedPrice(i), 0) - 0.01 ? '#34d399' : '#fbbf24' }}>S/ {paymentMethods.reduce((s, p) => s + p.amount, 0).toFixed(2)}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '8px', marginTop: '8px' }}>
                         <span style={{ color: '#a1a1aa' }}>Falta pagar:</span>
-                        <span style={{ color: '#f87171' }}>S/ {Math.max(0, cart.reduce((s, i) => s + i.price, 0) - paymentMethods.reduce((s, p) => s + p.amount, 0)).toFixed(2)}</span>
+                        <span style={{ color: '#f87171' }}>S/ {Math.max(0, cart.reduce((s, i) => s + getDiscountedPrice(i), 0) - paymentMethods.reduce((s, p) => s + p.amount, 0)).toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
@@ -366,11 +403,11 @@ export default function StoreClient({ initialProducts, categories, session }: { 
                     <>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', color: '#a1a1aa', fontSize: '14px' }}>
                         <span>Subtotal</span>
-                        <span>S/ {cart.reduce((s, i) => s + i.price, 0).toFixed(2)}</span>
+                        <span>S/ {cart.reduce((s, i) => s + getDiscountedPrice(i), 0).toFixed(2)}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', fontSize: '18px', fontWeight: 'bold' }}>
                         <span>Total a Pagar</span>
-                        <span style={{ color: '#34d399' }}>S/ {cart.reduce((s, i) => s + i.price, 0).toFixed(2)}</span>
+                        <span style={{ color: '#34d399' }}>S/ {cart.reduce((s, i) => s + getDiscountedPrice(i), 0).toFixed(2)}</span>
                       </div>
                     </>
                   )}
@@ -378,7 +415,7 @@ export default function StoreClient({ initialProducts, categories, session }: { 
                   <button 
                     onClick={checkoutStep === "cart" ? () => {
                       setCheckoutStep("payment"); 
-                      setPaymentMethods([{ method: "Efectivo", amount: cart.reduce((s, i) => s + i.price, 0) }]);
+                      setPaymentMethods([{ method: "Efectivo", amount: cart.reduce((s, i) => s + getDiscountedPrice(i), 0) }]);
                     } : handleCheckout} 
                     style={{ width: '100%', padding: '16px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px', transition: 'background 0.2s' }}
                   >
@@ -421,7 +458,7 @@ export default function StoreClient({ initialProducts, categories, session }: { 
           style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '32px' }}
         >
           <AnimatePresence>
-            {filteredProducts.map((p) => (
+            {mappedProducts.map((p) => (
               <motion.div 
                 key={p.id}
                 variants={item}
@@ -433,7 +470,8 @@ export default function StoreClient({ initialProducts, categories, session }: { 
                 onClick={() => setSelectedProduct(p)}
               >
                 <div className="card-media" style={{ height: '240px', background: '#000', position: 'relative' }}>
-                  {p.isNew && <span style={{ position: 'absolute', top: '12px', left: '12px', background: '#7c3aed', color: '#fff', fontSize: '10px', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold' }}><Sparkles size={12} style={{ display: 'inline', marginRight: '4px' }} />NUEVO</span>}
+                  {p.isNew && <span style={{ position: 'absolute', top: '12px', left: '12px', background: '#7c3aed', color: '#fff', fontSize: '10px', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold', zIndex: 10 }}><Sparkles size={12} style={{ display: 'inline', marginRight: '4px' }} />NUEVO</span>}
+                  {p.discountedPrice < p.originalPrice && <span style={{ position: 'absolute', top: '12px', right: '12px', background: '#db2777', color: '#fff', fontSize: '10px', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold', zIndex: 10 }}>-{Math.round((1 - p.discountedPrice / p.originalPrice) * 100)}%</span>}
                   <img src={p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 <div className="card-content" style={{ padding: '24px' }}>
@@ -445,7 +483,10 @@ export default function StoreClient({ initialProducts, categories, session }: { 
                   <p style={{ fontSize: '14px', color: '#a1a1aa', marginBottom: '16px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.desc}</p>
                   
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '20px', fontWeight: 'bold' }}>S/ {p.price.toFixed(2)}</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      {p.discountedPrice < p.originalPrice && <span style={{ fontSize: '12px', color: '#a1a1aa', textDecoration: 'line-through' }}>S/ {p.originalPrice.toFixed(2)}</span>}
+                      <span style={{ fontSize: '20px', fontWeight: 'bold', color: p.discountedPrice < p.originalPrice ? '#db2777' : '#fff' }}>S/ {p.discountedPrice.toFixed(2)}</span>
+                    </div>
                     <button 
                       onClick={(e) => { e.stopPropagation(); addToCart(p); }}
                       style={{ padding: '8px 16px', background: (p.inStock && p.stock > 0) ? '#fff' : 'rgba(255,255,255,0.1)', color: (p.inStock && p.stock > 0) ? '#000' : '#a1a1aa', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: (p.inStock && p.stock > 0) ? 'pointer' : 'not-allowed' }}
@@ -514,7 +555,12 @@ export default function StoreClient({ initialProducts, categories, session }: { 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: '24px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
                   <div>
                     <div style={{ fontSize: '14px', color: '#a1a1aa', marginBottom: '4px' }}>Precio</div>
-                    <div style={{ fontSize: '32px', fontWeight: 'bold' }}>S/ {selectedProduct.price.toFixed(2)}</div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px' }}>
+                      <div style={{ fontSize: '32px', fontWeight: 'bold', color: getDiscountedPrice(selectedProduct) < selectedProduct.price ? '#db2777' : '#fff' }}>S/ {getDiscountedPrice(selectedProduct).toFixed(2)}</div>
+                      {getDiscountedPrice(selectedProduct) < selectedProduct.price && (
+                        <div style={{ fontSize: '18px', color: '#a1a1aa', textDecoration: 'line-through' }}>S/ {selectedProduct.price.toFixed(2)}</div>
+                      )}
+                    </div>
                     <div style={{ fontSize: '13px', color: (selectedProduct.inStock && selectedProduct.stock > 0) ? '#34d399' : '#f87171', marginTop: '4px' }}>
                       {(selectedProduct.inStock && selectedProduct.stock > 0) ? `En Stock (${selectedProduct.stock} un.)` : 'Agotado'}
                     </div>

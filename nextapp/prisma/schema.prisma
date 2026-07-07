@@ -47,3 +47,14 @@ model Purchase {
   items     String   // JSON string of {productId, name, price, quantity}
   paymentDetails String? // JSON string of [{method, amount}]
 }
+
+model Promotion {
+  id         Int      @id @default(autoincrement())
+  title      String
+  discount   Float    // percentage, e.g., 30 for 30%
+  startDate  DateTime
+  endDate    DateTime
+  isActive   Boolean  @default(true)
+  targetType String   // "ALL", "CATEGORY", "PRODUCT"
+  targetId   Int?     // Category ID or Product ID
+}
