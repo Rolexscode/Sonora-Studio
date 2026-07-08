@@ -648,12 +648,12 @@ export default function AdminClient({
               background: tab === item.id ? s.purpleMuted : "transparent",
               color: tab === item.id ? s.purpleLight : s.muted,
               border: `1px solid ${tab === item.id ? "rgba(124,58,237,0.2)" : "transparent"}`,
-              textAlign: "left", fontSize: "13px", fontWeight: tab === item.id ? 600 : 400, transition: "all 0.15s", width: "100%",
+              textAlign: "left", fontSize: "15px", fontWeight: tab === item.id ? 600 : 400, transition: "all 0.15s", width: "100%",
             }}>
             {item.icon}
             <span style={{ flex: 1 }}>{item.label}</span>
             {item.badge !== undefined && (
-              <span style={{ fontSize: "10px", background: tab === item.id ? s.purple : "rgba(255,255,255,0.08)", color: tab === item.id ? "#fff" : s.muted, padding: "2px 6px", borderRadius: "10px", fontWeight: 700 }}>
+              <span style={{ fontSize: "11px", background: tab === item.id ? s.purple : "rgba(255,255,255,0.08)", color: tab === item.id ? "#fff" : s.muted, padding: "2px 6px", borderRadius: "10px", fontWeight: 700 }}>
                 {item.badge}
               </span>
             )}
